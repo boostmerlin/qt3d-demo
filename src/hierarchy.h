@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QPointer>
 
-#include "demo/primitive_object.h"
+#include "demo/scene_object.h"
 
 class QModelIndex;
 class QStandardItem;
@@ -18,24 +18,24 @@ class Hierarchy final : public QObject
 public:
     explicit Hierarchy(QTreeView *view, QObject *parent = nullptr);
 
-    void setObjects(const QList<PrimitiveObject *> &objects);
-    void setCurrentObject(PrimitiveObject *object);
-    void refreshObject(PrimitiveObject *object);
+    void setObjects(const QList<SceneObject *> &objects);
+    void setCurrentObject(SceneObject *object);
+    void refreshObject(SceneObject *object);
 
 signals:
-    void currentObjectRequested(PrimitiveObject *object);
+    void currentObjectRequested(SceneObject *object);
 
 private:
     static constexpr int ObjectRole = Qt::UserRole + 1;
 
     void rebuild();
-    [[nodiscard]] QStandardItem *findObjectItem(PrimitiveObject *object,
+    [[nodiscard]] QStandardItem *findObjectItem(SceneObject *object,
                                                 QStandardItem *parentItem = nullptr) const;
 
     QPointer<QTreeView> m_view;
     QStandardItemModel *m_model{};
-    QList<PrimitiveObject *> m_objects;
-    QPointer<PrimitiveObject> m_currentObject;
+    QList<SceneObject *> m_objects;
+    QPointer<SceneObject> m_currentObject;
     bool m_syncingSelection = false;
     bool m_rebuildingHierarchy = false;
 };

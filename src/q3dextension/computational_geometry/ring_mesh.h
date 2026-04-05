@@ -33,15 +33,15 @@ public slots:
 
     void setSlices(int slices);
 
-    void setInnerRadius(float radius);
+    void setInnerRadius(float radius) const;
 
-    void setOuterRadius(float radius);
+    void setOuterRadius(float radius) const;
 
-    void setLength(float length);
+    void setLength(float length) const;
 
-    void setStartAngle(float angle);
+    void setStartAngle(float angle) const;
 
-    void setEndAngle(float angle);
+    void setEndAngle(float angle) const;
 
     void setStartAngleInDegrees(float angle);
 

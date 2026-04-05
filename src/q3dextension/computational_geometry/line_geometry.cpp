@@ -2,7 +2,7 @@
 #include "line_geometry.h"
 
 constexpr uint vertexSize = 3 * sizeof(float);
-constexpr int minLoopVertices = 3;
+constexpr int minLoopVertices = 2;
 
 LineGeometry::LineGeometry(Qt3DCore::QNode *parent) : Qt3DCore::QGeometry(parent) {
     m_vertexBuffer = new Qt3DCore::QBuffer(this);

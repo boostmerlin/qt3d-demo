@@ -28,12 +28,14 @@
 
 ### 2.2 Primitive 创建
 
-当前 demo 已支持创建 4 种基础几何体：
+当前 demo 已支持创建 6 种基础几何体：
 
 - Box
 - Sphere
 - Cylinder
 - Cone
+- Line
+- Ring
 
 点击顶部按钮后，系统会自动：
 
@@ -83,6 +85,8 @@
   - Sphere: Radius
   - Cylinder: Radius / Height
   - Cone: Radius / Height
+  - Line: Start X / Start Y / Start Z / End X / End Y / End Z
+  - Ring: Inner Radius / Outer Radius / Length / Start Angle / End Angle
 - `Delete Object` 支持删除当前对象
 
 当前属性面板已经具备基本的编辑状态切换：
@@ -116,12 +120,14 @@
 - 对象创建、更新、删除
 - 选中对象高亮显示
 
-当前 demo 的 4 类 primitive 都有自己的渲染节点：
+当前 demo 的 6 类 primitive 都有自己的渲染节点：
 
 - `BoxPrimitiveRenderNode`
 - `SpherePrimitiveRenderNode`
 - `CylinderPrimitiveRenderNode`
 - `ConePrimitiveRenderNode`
+- `LinePrimitiveRenderNode`
+- `RingPrimitiveRenderNode`
 
 这些节点已经会根据对象属性同步：
 

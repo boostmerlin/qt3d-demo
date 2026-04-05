@@ -3,7 +3,7 @@
 #include <Qt3DExtras/QConeMesh>
 
 #include "primitive_object.h"
-#include "render_node.h"
+#include "core/render_node.h"
 
 class PrimitiveRenderNodeBase : public RenderNodeEntityMix<WithMaterial, Selectable> {
     Q_OBJECT
@@ -69,6 +69,26 @@ class ConePrimitiveRenderNode final : public PrimitiveRenderNodeBase {
 
 public:
     ConePrimitiveRenderNode();
+
+    void onCreate() override;
+    void onUpdate() override;
+};
+
+class RingPrimitiveRenderNode final : public PrimitiveRenderNodeBase {
+    Q_OBJECT
+
+public:
+    RingPrimitiveRenderNode();
+
+    void onCreate() override;
+    void onUpdate() override;
+};
+
+class LinePrimitiveRenderNode final : public PrimitiveRenderNodeBase {
+    Q_OBJECT
+
+public:
+    LinePrimitiveRenderNode();
 
     void onCreate() override;
     void onUpdate() override;

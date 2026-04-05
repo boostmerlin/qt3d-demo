@@ -1,9 +1,15 @@
 #include <Qt3DRender/QMaterial>
+
 #include "render_node.h"
 #include "behavior_component.h"
 
-bool RenderNode::updateRenderData(const QObject *) {
+bool RenderNode::updateRenderData(const QObject *object) {
+    m_objectData = const_cast<QObject *>(object);
     return true;
+}
+
+const QObject *RenderNode::objectData() const {
+    return m_objectData;
 }
 
 Qt3DCore::QTransform *RenderNode::transform() const {
@@ -38,6 +44,7 @@ bool ProxyRenderNode::isProxyNode() const {
 
 bool ProxyRenderNode::updateRenderData(const QObject *data) {
     Q_ASSERT(m_renderNode);
+    RenderNode::updateRenderData(data);
     return m_renderNode->updateRenderData(data);
 }
 
@@ -245,4 +252,3 @@ WithMaterial::~WithMaterial() {
         }
     }
 }
-

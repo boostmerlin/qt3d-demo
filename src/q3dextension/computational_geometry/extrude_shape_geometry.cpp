@@ -3,6 +3,7 @@
 //
 
 #include <QVector3D>
+
 #include "extrude_shape_geometry.h"
 #include "geometry_util.h"
 
@@ -15,7 +16,6 @@ ExtrudeShapeGeometry::ExtrudeShapeGeometry(Qt3DCore::QNode *parent)
 }
 
 void ExtrudeShapeGeometry::setCurve(const Curve *curve) {
-    Q_ASSERT(curve);
     if (m_curve == curve) {
         return;
     }
@@ -23,18 +23,18 @@ void ExtrudeShapeGeometry::setCurve(const Curve *curve) {
         disconnect(m_curve, &Curve::curveChanged, this, nullptr);
     }
     m_curve = const_cast<Curve *>(curve);
-    if (!m_curve->parent()) {
+    if (m_curve && !m_curve->parent()) {
         m_curve->setParent(this);
     }
-
-    connect(m_curve, &Curve::curveChanged, this, &ExtrudeShapeGeometry::update);
+    if (m_curve) {
+        connect(m_curve, &Curve::curveChanged, this, &ExtrudeShapeGeometry::update);
+    }
 
     emit curveChanged();
     update();
 }
 
 void ExtrudeShapeGeometry::setShape(const Shape *shape) {
-    Q_ASSERT(shape);
     if (m_shape == shape) {
         return;
     }
@@ -50,6 +50,22 @@ void ExtrudeShapeGeometry::setShape(const Shape *shape) {
     }
     emit shapeChanged();
     update();
+}
+
+void ExtrudeShapeGeometry::clearExtrude()
+{
+    if (m_curve) {
+        disconnect(m_curve, &Curve::curveChanged, this, nullptr);
+    }
+    if (m_shape) {
+        disconnect(m_shape, &Shape::shapeChanged, this, nullptr);
+    }
+    m_curve = nullptr;
+    m_shape = nullptr;
+    m_vertexBuffer->setData({});
+    m_indexBuffer->setData({});
+    m_normalBuffer->setData({});
+    resetAttribute();
 }
 
 struct ExtrudeResult {

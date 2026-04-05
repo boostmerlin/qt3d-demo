@@ -1,13 +1,18 @@
 #include <QAbstractItemView>
+#include <QApplication>
 #include <QEvent>
 #include <QList>
+#include <QMouseEvent>
 #include <QSizePolicy>
 #include <QSplitter>
 #include <QStatusBar>
+#include <QTimer>
 #include <QToolButton>
 #include <QToolBar>
 #include <QVBoxLayout>
 
+#include "demo/polygon_object.h"
+#include "demo/scene_object.h"
 #include "demo/primitive_object.h"
 #include "demo/scene_controller.h"
 #include "hierarchy.h"
@@ -74,14 +79,14 @@ void MainWindow::setupEditorLayout()
 
 void MainWindow::setupWindowStyle()
 {
-    setWindowTitle(tr("Qt 3D Primitive Studio"));
+    setWindowTitle(tr("Qt 3D Demo"));
     resize(1360, 860);
     setMinimumSize(1120, 720);
 
     ui->horizontalLayout_2->setSpacing(10);
 
     ui->tree_frame->setMinimumWidth(240);
-    ui->property_frame->setMinimumWidth(360);
+    ui->property_frame->setMinimumWidth(420);
     ui->visualize_frame->setMinimumWidth(420);
 
     statusBar()->showMessage(tr("Ready"));
@@ -163,13 +168,13 @@ QHeaderView::section {
 QLabel {
     color: #2d3748;
 }
-QLineEdit, QDoubleSpinBox {
+QLineEdit, QDoubleSpinBox, QSpinBox {
     background: #f8fbff;
     border: 1px solid #d6dfeb;
     border-radius: 6px;
     padding: 6px 8px;
 }
-QLineEdit:focus, QDoubleSpinBox:focus {
+QLineEdit:focus, QDoubleSpinBox:focus, QSpinBox:focus {
     border-color: #63a4ff;
     background: #ffffff;
 }
@@ -190,9 +195,26 @@ void MainWindow::createActions() {
     addPrimitiveButton(tr("Sphere"), int(PrimitiveObject::PrimitiveType::Sphere), QStringLiteral("sphere"));
     addPrimitiveButton(tr("Cylinder"), int(PrimitiveObject::PrimitiveType::Cylinder), QStringLiteral("cylinder"));
     addPrimitiveButton(tr("Cone"), int(PrimitiveObject::PrimitiveType::Cone), QStringLiteral("cone"));
+    addPrimitiveButton(tr("Line"), int(PrimitiveObject::PrimitiveType::Line), QStringLiteral("line"));
+    addPrimitiveButton(tr("Ring"), int(PrimitiveObject::PrimitiveType::Ring), QStringLiteral("ring"));
+    addToolbarButton(tr("Polygon"), QStringLiteral("triangle"), [this] {
+        m_sceneController->addPolygon();
+    });
+    addToolbarButton(tr("Extrude"), QStringLiteral("extrude"), [this] {
+        m_sceneController->addExtrude();
+    });
 }
 
 void MainWindow::addPrimitiveButton(const QString &label, int type, const QString &iconName)
+{
+    addToolbarButton(label, iconName, [this, type] {
+        m_sceneController->addPrimitive(static_cast<PrimitiveObject::PrimitiveType>(type));
+    });
+}
+
+void MainWindow::addToolbarButton(const QString &label,
+                                  const QString &iconName,
+                                  const std::function<void()> &handler)
 {
     auto *button = new QToolButton(this);
     button->setText(label);
@@ -205,9 +227,7 @@ void MainWindow::addPrimitiveButton(const QString &label, int type, const QStrin
         button->setIcon(QIcon(QStringLiteral(":/icons/%1.svg").arg(iconName)));
     }
     ui->horizontalLayout_2->addWidget(button);
-    connect(button, &QToolButton::clicked, this, [this, type] {
-        m_sceneController->addPrimitive(static_cast<PrimitiveObject::PrimitiveType>(type));
-    });
+    connect(button, &QToolButton::clicked, this, handler);
 }
 
 void MainWindow::setupSceneView()
@@ -260,26 +280,32 @@ void MainWindow::connectController()
 
     connect(m_hierarchy, &Hierarchy::currentObjectRequested, m_sceneController, &SceneController::setCurrentObject);
     connect(m_propertyPanel, &PropertyPanel::parentChangeRequested, this,
-            [this](PrimitiveObject *object, PrimitiveObject *parentObject) {
+            [this](SceneObject *object, SceneObject *parentObject) {
                 m_sceneController->setObjectParent(object, parentObject);
             });
-    connect(m_propertyPanel, &PropertyPanel::removeRequested, this, [this](PrimitiveObject *object) {
+    connect(m_propertyPanel, &PropertyPanel::removeRequested, this, [this](SceneObject *object) {
         m_sceneController->removeObject(object);
     });
 
-    connect(m_sceneController, &SceneController::objectAdded, this, [refreshObjectViews](PrimitiveObject *) {
+    connect(m_sceneController, &SceneController::objectAdded, this, [refreshObjectViews](SceneObject *) {
         refreshObjectViews();
     });
-    connect(m_sceneController, &SceneController::objectRemoved, this, [refreshObjectViews](PrimitiveObject *) {
+    connect(m_sceneController, &SceneController::objectRemoved, this, [refreshObjectViews](SceneObject *) {
         refreshObjectViews();
     });
-    connect(m_sceneController, &SceneController::objectHierarchyChanged, this, [refreshObjectViews](PrimitiveObject *) {
+    connect(m_sceneController, &SceneController::objectHierarchyChanged, this, [refreshObjectViews](SceneObject *) {
         refreshObjectViews();
     });
     connect(m_sceneController, &SceneController::objectChanged, m_hierarchy, &Hierarchy::refreshObject);
     connect(m_sceneController, &SceneController::objectChanged, m_propertyPanel, &PropertyPanel::refreshObject);
     connect(m_sceneController, &SceneController::currentObjectChanged, m_hierarchy, &Hierarchy::setCurrentObject);
     connect(m_sceneController, &SceneController::currentObjectChanged, m_propertyPanel, &PropertyPanel::setCurrentObject);
+    connect(m_graphScene, &Graph3dScene::objectPicked, this, [this](QObject *object) {
+        m_scenePickHandled = true;
+        if (auto *sceneObject = qobject_cast<SceneObject *>(object)) {
+            m_sceneController->setCurrentObject(sceneObject);
+        }
+    });
 
     refreshObjectViews();
     m_hierarchy->setCurrentObject(m_sceneController->currentObject());
@@ -288,8 +314,54 @@ void MainWindow::connectController()
 
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
-    if (watched == m_graphContainer && event->type() == QEvent::Resize && m_graphScene) {
-        m_graphScene->resize(m_graphContainer->size());
+    if (watched == m_graphContainer) {
+        switch (event->type()) {
+        case QEvent::Resize:
+            if (m_graphScene) {
+                m_graphScene->resize(m_graphContainer->size());
+            }
+            break;
+        case QEvent::MouseButtonPress: {
+            auto *mouseEvent = static_cast<QMouseEvent *>(event);
+            if (mouseEvent->button() == Qt::LeftButton) {
+                m_sceneClickPending = true;
+                m_sceneClickMoved = false;
+                m_scenePickHandled = false;
+                m_sceneClickPressPos = mouseEvent->position().toPoint();
+            }
+            break;
+        }
+        case QEvent::MouseMove: {
+            auto *mouseEvent = static_cast<QMouseEvent *>(event);
+            if (m_sceneClickPending && (mouseEvent->buttons() & Qt::LeftButton)) {
+                const int dragDistance = (mouseEvent->position().toPoint() - m_sceneClickPressPos).manhattanLength();
+                if (dragDistance > QApplication::startDragDistance()) {
+                    m_sceneClickMoved = true;
+                }
+            }
+            break;
+        }
+        case QEvent::MouseButtonRelease: {
+            auto *mouseEvent = static_cast<QMouseEvent *>(event);
+            if (mouseEvent->button() == Qt::LeftButton && m_sceneClickPending) {
+                const bool shouldClearSelection = !m_sceneClickMoved;
+                m_sceneClickPending = false;
+                if (shouldClearSelection) {
+                    QTimer::singleShot(0, this, [this] {
+                        if (!m_scenePickHandled && m_sceneController) {
+                            m_sceneController->setCurrentObject(nullptr);
+                        }
+                        m_scenePickHandled = false;
+                    });
+                } else {
+                    m_scenePickHandled = false;
+                }
+            }
+            break;
+        }
+        default:
+            break;
+        }
     }
     return QMainWindow::eventFilter(watched, event);
 }

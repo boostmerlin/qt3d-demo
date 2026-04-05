@@ -3,8 +3,12 @@
 //
 
 #include <Qt3DRender/QDirectionalLight>
+#include <Qt3DRender/QObjectPicker>
+#include <Qt3DRender/QPickingSettings>
+#include <Qt3DRender/QRenderSettings>
 #include <QScreen>
 #include <QWidget>
+
 #include "graph3d_scene.h"
 #include "gizmo_axis.h"
 
@@ -33,6 +37,10 @@ static constexpr QVector3D gizmoPosition(0.0f, 0.0f, 0.0f);
 
 void Graph3dScene::setupWorld() {
     m_view = new Qt3DExtras::Qt3DWindow(nullptr, Qt3DRender::API::RHI);
+    auto *pickingSettings = m_view->renderSettings()->pickingSettings();
+    pickingSettings->setPickMethod(Qt3DRender::QPickingSettings::PrimitivePicking);
+    pickingSettings->setPickResultMode(Qt3DRender::QPickingSettings::NearestPick);
+    pickingSettings->setFaceOrientationPickingMode(Qt3DRender::QPickingSettings::FrontAndBackFace);
 
     m_sceneRoot = new Qt3DCore::QEntity();
     m_view->setRootEntity(m_sceneRoot);
@@ -425,7 +433,7 @@ void Graph3dScene::setModel(SceneModel *model) {
     }
 }
 
-void Graph3dScene::onDataChanged(RenderNode *renderNode, SceneModel::ActionType actionType) const {
+void Graph3dScene::onDataChanged(RenderNode *renderNode, SceneModel::ActionType actionType) {
     auto attachToResolvedParent = [this, renderNode] {
         auto *parentEntity = m_sceneRoot;
         if (auto *parentNode = renderNode->parentNode()) {
@@ -439,6 +447,7 @@ void Graph3dScene::onDataChanged(RenderNode *renderNode, SceneModel::ActionType 
     switch (actionType) {
         case SceneModel::Create:
             renderNode->createEntity(m_sceneRoot)->setObjectName(renderNode->objectName());
+            attachPicker(renderNode);
             attachToResolvedParent();
             break;
         case SceneModel::Update:
@@ -452,7 +461,27 @@ void Graph3dScene::onDataChanged(RenderNode *renderNode, SceneModel::ActionType 
     }
 }
 
-void Graph3dScene::initWorld() const {
+void Graph3dScene::attachPicker(RenderNode *renderNode)
+{
+    Q_ASSERT(renderNode);
+    auto *entity = renderNode->entity();
+    if (!entity || renderNode->getComponent<Qt3DRender::QObjectPicker>(false)) {
+        return;
+    }
+
+    auto *picker = new Qt3DRender::QObjectPicker(entity);
+    picker->setHoverEnabled(false);
+    picker->setDragEnabled(false);
+    entity->addComponent(picker);
+
+    connect(picker, &Qt3DRender::QObjectPicker::clicked, this, [this, renderNode] {
+        if (auto *object = const_cast<QObject *>(renderNode->objectData())) {
+            emit objectPicked(object);
+        }
+    });
+}
+
+void Graph3dScene::initWorld() {
     if (m_model.isNull()) {
         return;
     }
@@ -461,7 +490,7 @@ void Graph3dScene::initWorld() const {
     }
 }
 
-void Graph3dScene::destroyWorld() const {
+void Graph3dScene::destroyWorld() {
     m_model->cleanup();
 }
 

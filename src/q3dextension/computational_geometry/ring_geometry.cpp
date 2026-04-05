@@ -1,5 +1,7 @@
 #include "ring_geometry.h"
-#include "geometry_util.h"
+#include <QtMath>
+
+#include "q3dextension/utils/geometry_util.h"
 
 constexpr uint vertexSize = (3 + 3) * sizeof(float);
 

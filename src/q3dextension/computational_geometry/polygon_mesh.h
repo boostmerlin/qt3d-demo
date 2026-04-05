@@ -18,6 +18,7 @@ public:
 
     [[nodiscard]] bool validateVertices() const;
 
+    void clearPolygon();
     void setPolygon(const QList<QVector3D> &vertices);
 
     void setPolygon(const QList<QPointF> &vertices);

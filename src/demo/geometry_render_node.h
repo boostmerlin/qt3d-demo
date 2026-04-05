@@ -20,6 +20,7 @@ public:
         if (!primitive) {
             return false;
         }
+        RenderNode::updateRenderData(object);
         m_geometry = primitive;
         return true;
     }
@@ -52,4 +53,3 @@ protected:
 
     const PrimitiveObject *m_geometry{};
 };
-

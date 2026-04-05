@@ -21,6 +21,7 @@ public:
     Shape *shape() const;
 
 public slots:
+    void clearExtrude();
 
     void setCurve(const Curve *curve);
 

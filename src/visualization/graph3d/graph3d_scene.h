@@ -33,8 +33,12 @@ public:
     [[nodiscard]] inline CameraController* cameraController() const {
         return m_cameraController;
     }
+
+signals:
+    void objectPicked(QObject *object);
+
 private slots:
-    void onDataChanged(RenderNode *renderNode, SceneModel::ActionType actionType) const;
+    void onDataChanged(RenderNode *renderNode, SceneModel::ActionType actionType);
 private:
     QPointer<SceneModel> m_model;
 
@@ -55,9 +59,11 @@ private:
 
     void createAxisGizmo();
 
-    void initWorld() const;
+    void initWorld();
 
-    void destroyWorld() const;
+    void destroyWorld();
+
+    void attachPicker(RenderNode *renderNode);
 
     void setupWorld();
 };

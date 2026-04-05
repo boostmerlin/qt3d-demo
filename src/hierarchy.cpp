@@ -51,9 +51,8 @@ Hierarchy::Hierarchy(QTreeView *view, QObject *parent)
                 }
 
                 auto *item = m_model->itemFromIndex(current);
-                auto *object = item
-                                   ? qobject_cast<PrimitiveObject *>(item->data(ObjectRole).value<QObject *>())
-                                   : nullptr;
+                auto *object = item ? qobject_cast<SceneObject *>(item->data(ObjectRole).value<QObject *>())
+                                    : nullptr;
                 m_currentObject = object;
                 emit currentObjectRequested(object);
             });
@@ -63,7 +62,7 @@ Hierarchy::Hierarchy(QTreeView *view, QObject *parent)
             return;
         }
 
-        auto *object = qobject_cast<PrimitiveObject *>(item->data(ObjectRole).value<QObject *>());
+        auto *object = qobject_cast<SceneObject *>(item->data(ObjectRole).value<QObject *>());
         if (!object) {
             return;
         }
@@ -79,13 +78,13 @@ Hierarchy::Hierarchy(QTreeView *view, QObject *parent)
     });
 }
 
-void Hierarchy::setObjects(const QList<PrimitiveObject *> &objects)
+void Hierarchy::setObjects(const QList<SceneObject *> &objects)
 {
     m_objects = objects;
     rebuild();
 }
 
-void Hierarchy::setCurrentObject(PrimitiveObject *object)
+void Hierarchy::setCurrentObject(SceneObject *object)
 {
     m_currentObject = object;
 
@@ -102,7 +101,7 @@ void Hierarchy::setCurrentObject(PrimitiveObject *object)
     m_syncingSelection = false;
 }
 
-void Hierarchy::refreshObject(PrimitiveObject *object)
+void Hierarchy::refreshObject(SceneObject *object)
 {
     if (!object) {
         return;
@@ -122,11 +121,11 @@ void Hierarchy::rebuild()
     m_rebuildingHierarchy = true;
     const QSignalBlocker blocker(m_model);
 
-    auto buildItem = [this](auto &&self, PrimitiveObject *object) -> QStandardItem * {
+    auto buildItem = [this](auto &&self, SceneObject *object) -> QStandardItem * {
         auto *item = new QStandardItem(object->name());
         item->setEditable(true);
         item->setData(QVariant::fromValue(static_cast<QObject *>(object)), ObjectRole);
-        for (auto *child : object->childPrimitives()) {
+        for (auto *child : object->childSceneObjects()) {
             item->appendRow(self(self, child));
         }
         return item;
@@ -134,7 +133,7 @@ void Hierarchy::rebuild()
 
     m_model->removeRows(0, m_model->rowCount());
     for (auto *object : m_objects) {
-        if (!object->parentPrimitive()) {
+        if (!object->parentSceneObject()) {
             m_model->appendRow(buildItem(buildItem, object));
         }
     }
@@ -153,7 +152,7 @@ void Hierarchy::rebuild()
     m_rebuildingHierarchy = false;
 }
 
-QStandardItem *Hierarchy::findObjectItem(PrimitiveObject *object, QStandardItem *parentItem) const
+QStandardItem *Hierarchy::findObjectItem(SceneObject *object, QStandardItem *parentItem) const
 {
     if (!object) {
         return nullptr;
@@ -166,7 +165,7 @@ QStandardItem *Hierarchy::findObjectItem(PrimitiveObject *object, QStandardItem 
             continue;
         }
 
-        auto *candidate = qobject_cast<PrimitiveObject *>(item->data(ObjectRole).value<QObject *>());
+        auto *candidate = qobject_cast<SceneObject *>(item->data(ObjectRole).value<QObject *>());
         if (candidate == object) {
             return item;
         }

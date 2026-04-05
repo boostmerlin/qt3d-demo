@@ -10,11 +10,8 @@ float clampDimension(float value)
 }
 
 PrimitiveObject::PrimitiveObject(QObject *parent)
-    : QObservableObject(parent)
+    : SceneObject(parent)
 {
-    setPosition(QVector3D(0.0f, 0.0f, 0.0f));
-    setRotation(QVector3D(0.0f, 0.0f, 0.0f));
-    setColor(QColorConstants::White);
 }
 
 QString PrimitiveObject::typeName() const
@@ -24,14 +21,23 @@ QString PrimitiveObject::typeName() const
 
 PrimitiveObject *PrimitiveObject::parentPrimitive() const
 {
-    return qobject_cast<PrimitiveObject *>(parent());
+    return qobject_cast<PrimitiveObject *>(parentSceneObject());
+}
+
+float PrimitiveObject::dimensionMinimum(int) const
+{
+    return minimumDimensionValue();
+}
+
+float PrimitiveObject::dimensionMaximum(int) const
+{
+    return 9999.0f;
 }
 
 QList<PrimitiveObject *> PrimitiveObject::childPrimitives() const
 {
     QList<PrimitiveObject *> result;
-    const auto objectChildren = children();
-    for (auto *child : objectChildren) {
+    for (auto *child : childSceneObjects()) {
         if (auto *primitiveChild = qobject_cast<PrimitiveObject *>(child)) {
             result.append(primitiveChild);
         }
@@ -41,14 +47,7 @@ QList<PrimitiveObject *> PrimitiveObject::childPrimitives() const
 
 bool PrimitiveObject::isAncestorOf(const PrimitiveObject *object) const
 {
-    auto *cursor = object ? object->parentPrimitive() : nullptr;
-    while (cursor) {
-        if (cursor == this) {
-            return true;
-        }
-        cursor = cursor->parentPrimitive();
-    }
-    return false;
+    return SceneObject::isAncestorOf(object);
 }
 
 QString PrimitiveObject::displayName(PrimitiveType type)
@@ -62,6 +61,10 @@ QString PrimitiveObject::displayName(PrimitiveType type)
         return QStringLiteral("Cylinder");
     case PrimitiveType::Cone:
         return QStringLiteral("Cone");
+    case PrimitiveType::Line:
+        return QStringLiteral("Line");
+    case PrimitiveType::Ring:
+        return QStringLiteral("Ring");
     }
     return QStringLiteral("Primitive");
 }
@@ -301,6 +304,230 @@ void ConeObject::setDimensionValue(int index, float value)
         break;
     case 1:
         setHeight(value);
+        break;
+    default:
+        break;
+    }
+}
+
+LineObject::LineObject(QObject *parent)
+    : PrimitiveObject(parent)
+{
+    setColor(baseColor());
+    setStartPoint(QVector3D(-0.8f, 0.0f, 0.0f));
+    setEndPoint(QVector3D(0.8f, 0.0f, 0.0f));
+    setLineType(LineGeometry::Line);
+    observableChain(false);
+}
+
+PrimitiveObject::PrimitiveType LineObject::primitiveType() const
+{
+    return PrimitiveType::Line;
+}
+
+QColor LineObject::baseColor() const
+{
+    return {0x0f, 0x76, 0x6e};
+}
+
+int LineObject::editableDimensionCount() const
+{
+    return 6;
+}
+
+QString LineObject::dimensionLabel(int index) const
+{
+    switch (index) {
+    case 0:
+        return QStringLiteral("Start X");
+    case 1:
+        return QStringLiteral("Start Y");
+    case 2:
+        return QStringLiteral("Start Z");
+    case 3:
+        return QStringLiteral("End X");
+    case 4:
+        return QStringLiteral("End Y");
+    case 5:
+        return QStringLiteral("End Z");
+    default:
+        return {};
+    }
+}
+
+float LineObject::dimensionValue(int index) const
+{
+    const QVector3D start = startPoint();
+    const QVector3D end = endPoint();
+    switch (index) {
+    case 0:
+        return start.x();
+    case 1:
+        return start.y();
+    case 2:
+        return start.z();
+    case 3:
+        return end.x();
+    case 4:
+        return end.y();
+    case 5:
+        return end.z();
+    default:
+        return 0.0f;
+    }
+}
+
+float LineObject::dimensionMinimum(int) const
+{
+    return -9999.0f;
+}
+
+float LineObject::dimensionMaximum(int) const
+{
+    return 9999.0f;
+}
+
+void LineObject::setDimensionValue(int index, float value)
+{
+    QVector3D start = startPoint();
+    QVector3D end = endPoint();
+    switch (index) {
+    case 0:
+        start.setX(value);
+        setStartPoint(start);
+        break;
+    case 1:
+        start.setY(value);
+        setStartPoint(start);
+        break;
+    case 2:
+        start.setZ(value);
+        setStartPoint(start);
+        break;
+    case 3:
+        end.setX(value);
+        setEndPoint(end);
+        break;
+    case 4:
+        end.setY(value);
+        setEndPoint(end);
+        break;
+    case 5:
+        end.setZ(value);
+        setEndPoint(end);
+        break;
+    default:
+        break;
+    }
+}
+
+RingObject::RingObject(QObject *parent)
+    : PrimitiveObject(parent)
+{
+    setInnerRadiusValidator([](const float &value, const QObservableObject *owner) {
+        const auto *ring = qobject_cast<const RingObject *>(owner);
+        return ring && value >= PrimitiveObject::minimumDimensionValue() && value <= ring->outerRadius();
+    });
+    setOuterRadiusValidator([](const float &value, const QObservableObject *owner) {
+        const auto *ring = qobject_cast<const RingObject *>(owner);
+        return ring && value >= ring->innerRadius();
+    });
+    setLengthValidator([](const float &value, const QObservableObject *) {
+        return value >= PrimitiveObject::minimumDimensionValue();
+    });
+    setStartAngleValidator([](const float &value, const QObservableObject *) {
+        return value >= 0.0f && value <= 360.0f;
+    });
+    setEndAngleValidator([](const float &value, const QObservableObject *) {
+        return value >= 0.0f && value <= 360.0f;
+    });
+    setColor(baseColor());
+    setInnerRadius(0.3f);
+    setOuterRadius(0.7f);
+    setLength(0.35f);
+    setStartAngle(0.0f);
+    setEndAngle(360.0f);
+    observableChain(false);
+}
+
+PrimitiveObject::PrimitiveType RingObject::primitiveType() const
+{
+    return PrimitiveType::Ring;
+}
+
+QColor RingObject::baseColor() const
+{
+    return {0x9b, 0x51, 0xe0};
+}
+
+int RingObject::editableDimensionCount() const
+{
+    return 5;
+}
+
+QString RingObject::dimensionLabel(int index) const
+{
+    switch (index) {
+    case 0:
+        return QStringLiteral("Inner Radius");
+    case 1:
+        return QStringLiteral("Outer Radius");
+    case 2:
+        return QStringLiteral("Length");
+    case 3:
+        return QStringLiteral("Start Angle");
+    case 4:
+        return QStringLiteral("End Angle");
+    default:
+        return {};
+    }
+}
+
+float RingObject::dimensionValue(int index) const
+{
+    switch (index) {
+    case 0:
+        return innerRadius();
+    case 1:
+        return outerRadius();
+    case 2:
+        return length();
+    case 3:
+        return startAngle();
+    case 4:
+        return endAngle();
+    default:
+        return 0.0f;
+    }
+}
+
+float RingObject::dimensionMinimum(int index) const
+{
+    return index >= 3 ? 0.0f : minimumDimensionValue();
+}
+
+float RingObject::dimensionMaximum(int index) const
+{
+    return index >= 3 ? 360.0f : 9999.0f;
+}
+
+void RingObject::setDimensionValue(int index, float value)
+{
+    switch (index) {
+    case 0:
+        setInnerRadius(qMin(clampDimension(value), outerRadius()));
+        break;
+    case 1:
+        setOuterRadius(qMax(clampDimension(value), innerRadius()));
+        break;
+    case 2:
+        setLength(clampDimension(value));
+        break;
+    case 3:
+        setStartAngle(qBound(0.0f, value, 360.0f));
+        break;
+    case 4:
+        setEndAngle(qBound(0.0f, value, 360.0f));
         break;
     default:
         break;

@@ -6,6 +6,9 @@
 #include <QSphereMesh>
 #include <QCylinderMesh>
 
+#include "q3dextension/computational_geometry/line_mesh.h"
+#include "q3dextension/computational_geometry/ring_mesh.h"
+
 PrimitiveRenderNodeBase::PrimitiveRenderNodeBase()
 {
     auto *material = new Qt3DExtras::QPhongMaterial();
@@ -19,6 +22,7 @@ bool PrimitiveRenderNodeBase::updateRenderData(const QObject *object)
     if (!primitiveObject) {
         return false;
     }
+    RenderNode::updateRenderData(object);
     m_primitive = primitiveObject;
     setObjectName(primitiveObject->name());
     return true;
@@ -170,6 +174,62 @@ void ConePrimitiveRenderNode::onUpdate()
     updateMaterial();
 }
 
+RingPrimitiveRenderNode::RingPrimitiveRenderNode()
+    : PrimitiveRenderNodeBase()
+{
+}
+
+void RingPrimitiveRenderNode::onCreate()
+{
+    auto *mesh = new RingMesh();
+    mesh->setRings(2);
+    mesh->setSlices(48);
+    entity()->addComponent(mesh);
+    attachMaterial();
+    onUpdate();
+}
+
+void RingPrimitiveRenderNode::onUpdate()
+{
+    const auto *object = primitiveAs<RingObject>();
+    Q_ASSERT(object);
+    auto *mesh = getComponent<RingMesh>();
+    Q_ASSERT(mesh);
+    mesh->setInnerRadius(object->innerRadius());
+    mesh->setOuterRadius(object->outerRadius());
+    mesh->setLength(object->length());
+    mesh->setStartAngleInDegrees(object->startAngle());
+    mesh->setEndAngleInDegrees(object->endAngle());
+    applyTransform();
+    updateMaterial();
+}
+
+LinePrimitiveRenderNode::LinePrimitiveRenderNode()
+    : PrimitiveRenderNodeBase()
+{
+}
+
+void LinePrimitiveRenderNode::onCreate()
+{
+    auto *mesh = new LineMesh();
+    mesh->setLineType(LineGeometry::Line);
+    entity()->addComponent(mesh);
+    attachMaterial();
+    onUpdate();
+}
+
+void LinePrimitiveRenderNode::onUpdate()
+{
+    const auto *object = primitiveAs<LineObject>();
+    Q_ASSERT(object);
+    auto *mesh = getComponent<LineMesh>();
+    Q_ASSERT(mesh);
+    mesh->setLineType(object->lineType());
+    mesh->setLinePoints({object->startPoint(), object->endPoint()});
+    applyTransform();
+    updateMaterial();
+}
+
 RenderNode *PrimitiveRenderNode::create(const QObject *object)
 {
     if (qobject_cast<const BoxObject *>(object)) {
@@ -183,6 +243,12 @@ RenderNode *PrimitiveRenderNode::create(const QObject *object)
     }
     if (qobject_cast<const ConeObject *>(object)) {
         return new ConePrimitiveRenderNode();
+    }
+    if (qobject_cast<const LineObject *>(object)) {
+        return new LinePrimitiveRenderNode();
+    }
+    if (qobject_cast<const RingObject *>(object)) {
+        return new RingPrimitiveRenderNode();
     }
     return nullptr;
 }

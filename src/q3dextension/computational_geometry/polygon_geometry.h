@@ -11,6 +11,7 @@ public:
     explicit PolygonGeometry(Qt3DCore::QNode *parent = nullptr);
 
 public slots:
+    void clearPolygon();
 
     void setPolygon(const QList<QVector3D> &vertices);
 
@@ -38,6 +39,7 @@ public:
     bool validateVertices() const;
 
 private:
+    void clearGeometry();
     void init();
 
     QByteArray generateVertices(uint count) const;

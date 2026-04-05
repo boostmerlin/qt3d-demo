@@ -8,7 +8,7 @@ class RingGeometry : public Qt3DCore::QGeometry {
 Q_OBJECT
 
 public:
-    explicit RingGeometry(QNode *parent = nullptr);
+    explicit RingGeometry(Qt3DCore::QNode *parent = nullptr);
 
     int rings() const {
         return m_rings;

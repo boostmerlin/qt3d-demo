@@ -14,6 +14,8 @@ Q_OBJECT
 public:
     explicit ExtrudeShapeMesh(Qt3DCore::QNode *parent = nullptr);
 
+    void clearExtrude() const;
+
     void setCurve(const Curve *curve);
 
     void setShape(const Shape *shape);

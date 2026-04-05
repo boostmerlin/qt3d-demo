@@ -1,8 +1,11 @@
 #include "ring_mesh.h"
 
+#include <QtMath>
+
 RingMesh::RingMesh(Qt3DCore::QNode *parent) : Qt3DRender::QGeometryRenderer(parent) {
     auto geometry = new RingGeometry(this);
     Qt3DRender::QGeometryRenderer::setGeometry(geometry);
+    Qt3DRender::QGeometryRenderer::setPrimitiveType(Qt3DRender::QGeometryRenderer::Triangles);
 }
 
 RingGeometry *RingMesh::geometry() const {
@@ -47,27 +50,27 @@ void RingMesh::setSlices(int slices) {
     emit meshChanged(this);
 }
 
-void RingMesh::setInnerRadius(float radius) {
+void RingMesh::setInnerRadius(float radius) const {
     geometry()->setInnerRadius(radius);
     emit meshChanged(this);
 }
 
-void RingMesh::setOuterRadius(float radius) {
+void RingMesh::setOuterRadius(float radius) const {
     geometry()->setOuterRadius(radius);
     emit meshChanged(this);
 }
 
-void RingMesh::setLength(float length) {
+void RingMesh::setLength(float length) const {
     geometry()->setLength(length);
     emit meshChanged(this);
 }
 
-void RingMesh::setStartAngle(float angle) {
+void RingMesh::setStartAngle(float angle) const {
     geometry()->setStartAngle(angle);
     emit meshChanged(this);
 }
 
-void RingMesh::setEndAngle(float angle) {
+void RingMesh::setEndAngle(float angle) const {
     geometry()->setEndAngle(angle);
     emit meshChanged(this);
 }

@@ -3,6 +3,7 @@
 PolygonMesh::PolygonMesh(Qt3DCore::QNode *parent) : Qt3DRender::QGeometryRenderer(parent) {
     auto geometry = new PolygonGeometry(this);
     Qt3DRender::QGeometryRenderer::setGeometry(geometry);
+    Qt3DRender::QGeometryRenderer::setPrimitiveType(Qt3DRender::QGeometryRenderer::Triangles);
 }
 
 PolygonGeometry* PolygonMesh::polygonGeometry() const {
@@ -23,6 +24,11 @@ uint PolygonMesh::rings() const {
 
 bool PolygonMesh::validateVertices() const {
     return polygonGeometry()->validateVertices();
+}
+
+void PolygonMesh::clearPolygon() {
+    polygonGeometry()->clearPolygon();
+    emit meshChanged(this);
 }
 
 void PolygonMesh::setPolygon(const QList<QVector3D> &vertices) {

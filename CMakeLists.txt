@@ -54,10 +54,31 @@ set(PROJECT_SOURCES
         src/q3dextension/extras/text3d_entity.h
         src/q3dextension/computational_geometry/line_geometry.cpp
         src/q3dextension/computational_geometry/line_geometry.h
+        src/q3dextension/computational_geometry/line_mesh.cpp
+        src/q3dextension/computational_geometry/line_mesh.h
+        src/q3dextension/computational_geometry/ring_geometry.cpp
+        src/q3dextension/computational_geometry/ring_geometry.h
+        src/q3dextension/computational_geometry/ring_mesh.cpp
+        src/q3dextension/computational_geometry/ring_mesh.h
         src/q3dextension/computational_geometry/edge_mesh.cpp
         src/q3dextension/computational_geometry/edge_mesh.h
+        src/q3dextension/computational_geometry/extrude_shape_geometry.cpp
+        src/q3dextension/computational_geometry/extrude_shape_geometry.h
+        src/q3dextension/computational_geometry/extrude_shape_mesh.cpp
+        src/q3dextension/computational_geometry/extrude_shape_mesh.h
         src/q3dextension/utils/geometry_util.cpp
         src/q3dextension/utils/geometry_util.h
+        src/q3dextension/curves/curve.cpp
+        src/q3dextension/curves/curve.h
+        src/q3dextension/curves/line_curve.cpp
+        src/q3dextension/curves/line_curve.h
+        src/q3dextension/curves/bezier_curve.cpp
+        src/q3dextension/curves/bezier_curve.h
+        src/q3dextension/curves/bezier_curve.tpp
+        src/q3dextension/shapes/shape.cpp
+        src/q3dextension/shapes/shape.h
+        src/q3dextension/shapes/polygon_profile_shape.cpp
+        src/q3dextension/shapes/polygon_profile_shape.h
         src/visualization/graph3d/graph3d_scene.cpp
         src/visualization/graph3d/graph3d_scene.h
         src/visualization/graph3d/render_node_factory.cpp
@@ -68,13 +89,27 @@ set(PROJECT_SOURCES
         src/visualization/graph3d/core/render_node.h
         src/property_panel.cpp
         src/property_panel.h
+        src/demo/scene_object.cpp
+        src/demo/scene_object.h
         src/demo/edge_render_node.cpp
+        src/demo/extrude_object.cpp
+        src/demo/extrude_object.h
+        src/demo/extrude_render_node.cpp
+        src/demo/extrude_render_node.h
+        src/demo/polygon_object.cpp
+        src/demo/polygon_object.h
+        src/demo/polygon_render_node.cpp
+        src/demo/polygon_render_node.h
         src/demo/primitive_object.cpp
         src/demo/primitive_object.h
         src/demo/primitive_render_node.cpp
         src/demo/primitive_render_node.h
         src/demo/scene_controller.cpp
         src/demo/scene_controller.h
+        src/q3dextension/computational_geometry/polygon_geometry.cpp
+        src/q3dextension/computational_geometry/polygon_geometry.h
+        src/q3dextension/computational_geometry/polygon_mesh.cpp
+        src/q3dextension/computational_geometry/polygon_mesh.h
 )
 
 if(WIN32)
@@ -108,7 +143,11 @@ target_include_directories(qt3d-demo PRIVATE
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/src/core
         ${CMAKE_SOURCE_DIR}/src/demo
+        ${CMAKE_SOURCE_DIR}/src/utils
         ${CMAKE_SOURCE_DIR}/src/q3dextension/extras
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/utils
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/curves
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/shapes
         ${CMAKE_SOURCE_DIR}/src/visualization/graph3d
         ${CMAKE_SOURCE_DIR}/src/visualization/graph3d/core
 )

@@ -1,5 +1,5 @@
 #include "polygon_geometry.h"
-#include "geometry_util.h"
+#include "q3dextension/utils/geometry_util.h"
 
 constexpr uint vertexSize = (3 + 3) * sizeof(float);
 
@@ -74,12 +74,12 @@ size_t qHash(const QList<QVector3D> &vertices) {
 
 void PolygonGeometry::setPolygon(const QList<QVector3D> &vertices) {
     if (vertices.size() < 3) {
-        qWarning() << "[PolygonGeometry::setPolygon] input vert size < 3";
+        clearPolygon();
         return;
     }
     siftVertices(vertices);
     if (m_vertices.size() < 3) {
-        qWarning() << "[PolygonGeometry::setPolygon] valid vert size < 3, validate flag:" << validateVertices();
+        clearPolygon();
         return;
     }
     auto hash = qHash(m_vertices);
@@ -87,6 +87,13 @@ void PolygonGeometry::setPolygon(const QList<QVector3D> &vertices) {
         update();
         m_hash = hash;
     }
+}
+
+void PolygonGeometry::clearPolygon()
+{
+    m_vertices.clear();
+    m_hash = 0;
+    clearGeometry();
 }
 
 void PolygonGeometry::siftVertices(const QList<QVector3D> &vertices) {
@@ -260,6 +267,15 @@ void PolygonGeometry::update() {
     updateVertices();
 }
 
+void PolygonGeometry::clearGeometry()
+{
+    m_indexAttribute->setCount(0);
+    m_normalAttribute->setCount(0);
+    m_positionAttribute->setCount(0);
+    m_vertexBuffer->setData({});
+    m_indexBuffer->setData({});
+}
+
 bool PolygonGeometry::validateVertices() const {
     return m_resolution > 0;
 }
@@ -267,5 +283,4 @@ bool PolygonGeometry::validateVertices() const {
 void PolygonGeometry::setResolution(float resolution) {
     m_resolution = resolution;
 }
-
 

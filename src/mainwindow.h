@@ -1,7 +1,10 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <functional>
+
 #include <QMainWindow>
+#include <QPoint>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -36,9 +39,16 @@ private:
     QSplitter *m_mainSplitter{};
     Hierarchy *m_hierarchy{};
     PropertyPanel *m_propertyPanel{};
+    QPoint m_sceneClickPressPos;
+    bool m_sceneClickPending = false;
+    bool m_sceneClickMoved = false;
+    bool m_scenePickHandled = false;
 
     void createActions();
     void addPrimitiveButton(const QString &label, int type, const QString &iconName = QString());
+    void addToolbarButton(const QString &label,
+                          const QString &iconName,
+                          const std::function<void()> &handler);
     void setupSceneView();
     void setupHierarchy();
     void setupPropertyPanel();

@@ -56,6 +56,8 @@ public:
     //update render property here
     virtual bool updateRenderData(const QObject *);
 
+    [[nodiscard]] const QObject *objectData() const;
+
     virtual Qt3DCore::QEntity *createEntity(Qt3DCore::QNode *parent) noexcept = 0;
 
     virtual void updateEntity() = 0;
@@ -145,6 +147,9 @@ public:
                        y ? 0 : v.y(),
                        z ? 0 : v.z()});
     }
+
+private:
+    QPointer<QObject> m_objectData;
 };
 
 class ProxyRenderNode : public RenderNode {
@@ -325,4 +330,3 @@ private:
 };
 
 #endif //PMAXWELL_QT_RENDER_NODE_H
-

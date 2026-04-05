@@ -2,6 +2,8 @@
 
 #include <QQuaternion>
 
+#include "extrude_render_node.h"
+#include "polygon_render_node.h"
 #include "primitive_render_node.h"
 
 namespace {
@@ -10,30 +12,30 @@ QQuaternion identityRotation()
     return QQuaternion::fromEulerAngles(0.0f, 0.0f, 0.0f);
 }
 
-QQuaternion localRotation(const PrimitiveObject *object)
+QQuaternion localRotation(const SceneObject *object)
 {
     return object ? QQuaternion::fromEulerAngles(object->rotation()) : identityRotation();
 }
 
-QQuaternion worldRotation(const PrimitiveObject *object)
+QQuaternion worldRotation(const SceneObject *object)
 {
     if (!object) {
         return identityRotation();
     }
 
-    if (const auto *parent = object->parentPrimitive()) {
+    if (const auto *parent = object->parentSceneObject()) {
         return worldRotation(parent) * localRotation(object);
     }
     return localRotation(object);
 }
 
-QVector3D worldPosition(const PrimitiveObject *object)
+QVector3D worldPosition(const SceneObject *object)
 {
     if (!object) {
         return {};
     }
 
-    if (const auto *parent = object->parentPrimitive()) {
+    if (const auto *parent = object->parentSceneObject()) {
         return worldPosition(parent) + worldRotation(parent).rotatedVector(object->position());
     }
     return object->position();
@@ -48,10 +50,14 @@ SceneController::SceneController(QObject *parent)
     factory.registerCreator(SphereObject::staticMetaObject.className(), &PrimitiveRenderNode::create);
     factory.registerCreator(CylinderObject::staticMetaObject.className(), &PrimitiveRenderNode::create);
     factory.registerCreator(ConeObject::staticMetaObject.className(), &PrimitiveRenderNode::create);
+    factory.registerCreator(LineObject::staticMetaObject.className(), &PrimitiveRenderNode::create);
+    factory.registerCreator(RingObject::staticMetaObject.className(), &PrimitiveRenderNode::create);
+    factory.registerCreator(PolygonObject::staticMetaObject.className(), &PolygonRenderNode::create);
+    factory.registerCreator(ExtrudeObject::staticMetaObject.className(), &ExtrudeRenderNode::create);
 }
 
 PrimitiveObject *SceneController::addPrimitive(PrimitiveObject::PrimitiveType type,
-                                               PrimitiveObject *parentObject)
+                                               SceneObject *parentObject)
 {
     PrimitiveObject *object = nullptr;
     QObject *owner = parentObject ? static_cast<QObject *>(parentObject)
@@ -69,6 +75,12 @@ PrimitiveObject *SceneController::addPrimitive(PrimitiveObject::PrimitiveType ty
     case PrimitiveObject::PrimitiveType::Cone:
         object = new ConeObject(owner);
         break;
+    case PrimitiveObject::PrimitiveType::Line:
+        object = new LineObject(owner);
+        break;
+    case PrimitiveObject::PrimitiveType::Ring:
+        object = new RingObject(owner);
+        break;
     }
     Q_ASSERT(object);
     object->setName(nextName(type));
@@ -82,7 +94,39 @@ PrimitiveObject *SceneController::addPrimitive(PrimitiveObject::PrimitiveType ty
     return object;
 }
 
-bool SceneController::removeObject(PrimitiveObject *object)
+PolygonObject *SceneController::addPolygon(SceneObject *parentObject)
+{
+    QObject *owner = parentObject ? static_cast<QObject *>(parentObject)
+                                  : static_cast<QObject *>(this);
+    auto *object = new PolygonObject(owner);
+    object->setName(nextPolygonName());
+    object->setPosition(nextSpawnPosition());
+
+    registerObject(object);
+    m_objects.append(object);
+    m_sceneModel.createOrUpdate(object);
+    emit objectAdded(object);
+    setCurrentObject(object);
+    return object;
+}
+
+ExtrudeObject *SceneController::addExtrude(SceneObject *parentObject)
+{
+    QObject *owner = parentObject ? static_cast<QObject *>(parentObject)
+                                  : static_cast<QObject *>(this);
+    auto *object = new ExtrudeObject(owner);
+    object->setName(nextExtrudeName());
+    object->setPosition(nextSpawnPosition());
+
+    registerObject(object);
+    m_objects.append(object);
+    m_sceneModel.createOrUpdate(object);
+    emit objectAdded(object);
+    setCurrentObject(object);
+    return object;
+}
+
+bool SceneController::removeObject(SceneObject *object)
 {
     if (!object || !m_objects.contains(object)) {
         return false;
@@ -102,7 +146,7 @@ bool SceneController::removeCurrentObject()
     return removeObject(m_currentObject);
 }
 
-bool SceneController::setObjectParent(PrimitiveObject *object, PrimitiveObject *parentObject)
+bool SceneController::setObjectParent(SceneObject *object, SceneObject *parentObject)
 {
     if (!object || !m_objects.contains(object) || object == parentObject) {
         return false;
@@ -140,12 +184,12 @@ bool SceneController::setObjectParent(PrimitiveObject *object, PrimitiveObject *
     return true;
 }
 
-QList<PrimitiveObject *> SceneController::objects() const
+QList<SceneObject *> SceneController::objects() const
 {
     return m_objects;
 }
 
-PrimitiveObject *SceneController::currentObject() const
+SceneObject *SceneController::currentObject() const
 {
     return m_currentObject;
 }
@@ -155,7 +199,7 @@ SceneModel *SceneController::sceneModel()
     return &m_sceneModel;
 }
 
-void SceneController::setCurrentObject(PrimitiveObject *object)
+void SceneController::setCurrentObject(SceneObject *object)
 {
     if (m_currentObject == object) {
         return;
@@ -174,7 +218,7 @@ void SceneController::setCurrentObject(PrimitiveObject *object)
     emit currentObjectChanged(m_currentObject);
 }
 
-void SceneController::registerObject(PrimitiveObject *object)
+void SceneController::registerObject(SceneObject *object)
 {
     connect(object, &QObservableObject::propertyChanged, this, [this, object](const ObservableChangeNotify &) {
         emit objectChanged(object);
@@ -205,11 +249,29 @@ QString SceneController::nextName(PrimitiveObject::PrimitiveType type)
     case PrimitiveObject::PrimitiveType::Cone:
         counter = &m_coneCount;
         break;
+    case PrimitiveObject::PrimitiveType::Line:
+        counter = &m_lineCount;
+        break;
+    case PrimitiveObject::PrimitiveType::Ring:
+        counter = &m_ringCount;
+        break;
     }
 
     Q_ASSERT(counter);
     ++(*counter);
     return QStringLiteral("%1 %2").arg(PrimitiveObject::displayName(type)).arg(*counter);
+}
+
+QString SceneController::nextPolygonName()
+{
+    ++m_polygonCount;
+    return QStringLiteral("Polygon %1").arg(m_polygonCount);
+}
+
+QString SceneController::nextExtrudeName()
+{
+    ++m_extrudeCount;
+    return QStringLiteral("Extrude %1").arg(m_extrudeCount);
 }
 
 QVector3D SceneController::nextSpawnPosition() const

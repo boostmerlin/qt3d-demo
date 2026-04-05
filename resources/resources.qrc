@@ -3,7 +3,10 @@
     <file>icons/box.svg</file>
     <file>icons/cone.svg</file>
     <file>icons/cylinder.svg</file>
+    <file>icons/line.svg</file>
+    <file>icons/ring.svg</file>
     <file>icons/sphere.svg</file>
     <file>icons/triangle.svg</file>
+    <file>icons/extrude.svg</file>
   </qresource>
 </RCC>
