@@ -51,7 +51,7 @@ void PolygonMesh::setRings(uint rings) {
     emit meshChanged(this);
 }
 
-void PolygonMesh::setResolution(float resolution) {
+void PolygonMesh::setResolution(float resolution) const {
     polygonGeometry()->setResolution(resolution);
 }
 

@@ -9,6 +9,7 @@ set(DOCTEST_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 #endif ()
 
 find_package(Qt6 REQUIRED COMPONENTS Test)
+add_subdirectory(render_node)
 add_subdirectory(property_panel)
 
 find_package(doctest CONFIG QUIET)

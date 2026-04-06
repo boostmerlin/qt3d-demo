@@ -1,6 +1,7 @@
 #include "property_panel/sections/object_section.h"
 
 #include <QLabel>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QVBoxLayout>
 
@@ -75,7 +76,17 @@ ObjectSection::ObjectSection(QWidget *parent)
         "}");
     layout->addWidget(m_deleteButton);
     connect(m_deleteButton, &QPushButton::clicked, this, [this] {
-        if (m_currentObject) {
+        if (!m_currentObject) {
+            return;
+        }
+
+        const auto answer = QMessageBox::question(
+            this,
+            tr("Delete Object"),
+            tr("Delete \"%1\"?").arg(m_currentObject->name()),
+            QMessageBox::Yes | QMessageBox::Cancel,
+            QMessageBox::Cancel);
+        if (answer == QMessageBox::Yes) {
             emit removeRequested(m_currentObject);
         }
     });

@@ -112,6 +112,9 @@ void RenderNodeEntity::removeEntity(bool disposeSelf) {
     m_entity = nullptr;
     for (auto *child: children()) {
         auto *node = qobject_cast<RenderNode *>(child);
+        if (!node) {
+            continue;
+        }
         node->removeEntity(false);
     }
 

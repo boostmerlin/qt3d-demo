@@ -1,34 +1,36 @@
 # Project Summary
 
-本文档基于当前工程代码整理，目标是快速说明这个项目“已经具备什么能力”。
+本文档基于当前仓库代码整理，目标是快速说明这个项目现在已经具备什么能力，以及主程序和基础设施分别发展到了什么阶段。
 
 ## 1. 项目定位
 
-当前仓库是一个基于 Qt 6 + Qt3D + CMake 的 3D 编辑器原型工程。
+当前工程是一个基于 Qt 6 + Qt3D + CMake 的 3D 编辑器原型。
 
-从实际代码看，它包含两层内容：
+它同时包含两层内容：
 
-- 一层是已经能运行的 demo 应用：一个可交互的 primitive 场景编辑器
-- 一层是可复用的基础设施：可观察对象系统、事件总线、Qt3D 渲染节点体系、几何/曲线/网格扩展
+- 一个已经可以运行和交互的桌面 demo，围绕 primitive / polygon / extrude 对象编辑展开
+- 一组可复用的底层模块，包括可观察对象系统、事件总线、Qt3D 渲染节点体系，以及几何和曲线扩展
 
-## 2. 当前主程序已经实现的功能
+从仓库当前状态来看，这个项目已经超过了“Qt3D 示例程序”的范畴，更接近一个可继续扩展的小型 3D 建模/编辑器底座。
 
-### 2.1 主窗口与整体布局
+## 2. 主程序当前已经实现的功能
 
-主程序由 `src/main.cpp` 和 `src/mainwindow.*` 启动，当前界面已经具备：
+### 2.1 主窗口和界面布局
+
+主程序由 `src/main.cpp` 和 `src/mainwindow.*` 启动，当前界面已经包含：
 
 - 顶部菜单栏，包含 `File -> Exit`
-- 顶部 primitive 工具区
+- 顶部对象创建工具区
 - 左侧对象层级树
-- 中间 Qt3D 视图
-- 右侧属性面板
+- 中央 Qt3D 视图和视角工具栏
+- 右侧可滚动属性面板
 - 底部状态栏，默认显示 `Ready`
 
-主界面使用 `QSplitter` 组织三栏布局，左右面板都支持拖拽调整宽度。
+整体布局使用 `QSplitter` 组织三栏结构，左右面板都支持拖拽调整宽度。
 
-### 2.2 Primitive 创建
+### 2.2 对象创建
 
-当前 demo 已支持创建 6 种基础几何体：
+当前主程序支持创建 8 类对象：
 
 - Box
 - Sphere
@@ -36,377 +38,317 @@
 - Cone
 - Line
 - Ring
+- Polygon
+- Extrude
 
-点击顶部按钮后，系统会自动：
+点击顶部工具按钮后，系统会：
 
-- 创建对应的 `PrimitiveObject`
-- 分配递增名称，如 `Box 1`、`Sphere 2`
-- 分配一个默认出生位置，避免多个对象完全重叠
-- 为对象创建对应的 Qt3D 渲染节点
+- 创建对应的 `SceneObject`
+- 为对象分配递增名称，例如 `Box 1`、`Polygon 1`、`Extrude 1`
+- 为对象分配默认出生位置，避免完全重叠
+- 在 `SceneModel` 中创建对应的渲染节点
 - 自动切换当前选中对象
 
-相关实现位于：
+对应入口主要在：
 
-- `src/demo/primitive_object.*`
-- `src/demo/scene_controller.*`
-- `src/demo/primitive_render_node.*`
+- `src/mainwindow.cpp`
+- `src/scene/scene_controller.*`
+- `src/scene/primitive_object.*`
+- `src/scene/polygon_object.*`
+- `src/scene/extrude_object.*`
 
 ### 2.3 对象层级树
 
-左侧对象树由 `src/hierarchy.*` 实现，当前已支持：
+左侧对象树由 `src/hierarchy.*` 实现，当前支持：
 
-- 展示场景对象的树形结构
-- 根据 parent-child 关系嵌套显示对象
-- 点击树节点切换当前选中对象
-- 展开整个对象树
-- 直接在树中重命名对象
+- 展示场景对象的树形层级
+- 根据父子关系嵌套显示对象
+- 选中树节点切换当前对象
+- 自动展开整个对象树
+- 在树中直接重命名对象
 
-树节点重命名后会同步回对象数据模型，并联动右侧属性面板与 3D 视图。
+树节点重命名会直接同步回对象数据模型，并联动属性面板和 3D 渲染层。
 
 ### 2.4 属性面板
 
-右侧属性面板由 `src/property_panel.*` 实现，当前已经支持编辑以下属性：
+右侧属性面板由 `src/property_panel.*` 及其 `sections/`、`editors/` 子模块组成，当前支持：
 
-- Name
-- Type（只读）
-- Parent
-- Color
-- Position（X/Y/Z）
-- Rotation（X/Y/Z）
-- Dimensions（按不同 primitive 动态显示）
-- Delete Object
+- 对象通用属性
+  - Name
+  - Type（只读）
+  - Parent
+  - Color
+  - Delete Object
+- 变换属性
+  - Position（X / Y / Z）
+  - Rotation（X / Y / Z）
+- primitive 专属尺寸属性
+- polygon 专属编辑区
+- extrude 专属编辑区
 
-其中：
+对象区中的 `Parent` 支持将对象挂到场景根节点或其他对象下，并会过滤掉非法父节点选择。
 
-- `Parent` 支持把对象挂到场景根节点或其他对象下
-- `Color` 会弹出颜色选择器，并实时更新 3D 材质颜色
-- `Dimensions` 会根据对象类型动态变化
-  - Box: Width / Height / Depth
-  - Sphere: Radius
-  - Cylinder: Radius / Height
-  - Cone: Radius / Height
-  - Line: Start X / Start Y / Start Z / End X / End Y / End Z
-  - Ring: Inner Radius / Outer Radius / Length / Start Angle / End Angle
-- `Delete Object` 支持删除当前对象
+`Delete Object` 带确认对话框，避免误删。
 
-当前属性面板已经具备基本的编辑状态切换：
+### 2.5 Primitive 属性编辑
 
-- 未选中对象时显示空状态
-- 选中对象时自动刷新表单
-- 编辑对象后会立即同步到数据层和渲染层
+当前基础图元支持的参数编辑包括：
 
-### 2.5 父子层级与重挂接
+- Box: Width / Height / Depth
+- Sphere: Radius
+- Cylinder: Radius / Height
+- Cone: Radius / Height
+- Line: Start / End 点坐标
+- Ring: Inner Radius / Outer Radius / Length / Start Angle / End Angle
 
-当前工程已经支持对象父子关系，而不仅仅是平铺对象列表。
+这些属性变化会实时同步到对应的 Qt3D 渲染节点。
 
-`SceneController::setObjectParent` 已实现：
+### 2.6 Polygon 编辑能力
 
-- 防止把对象挂到自己身上
-- 防止循环父子关系
-- 重挂接时保持对象世界坐标和世界旋转不变
-- 重挂接后同步更新层级树和 3D 场景中的父子实体关系
+`PolygonObject` 已接入独立属性区，当前支持：
 
-这意味着当前 demo 已支持基本的层级组织能力。
+- 顶点列表编辑
+- 新增顶点
+- 顶点重排
+- 删除顶点
+- 拉伸高度 `Height`
+- 分层数 `Rings`
 
-### 2.6 3D 视图与场景渲染
+当顶点数不足 3 时，属性面板会显示校验提示，说明 polygon 无法正常渲染。
 
-中间区域通过 `Graph3dScene` 嵌入 `Qt3DWindow`，当前已具备：
+### 2.7 Extrude 编辑能力
 
-- Qt3D 主场景根节点
+`ExtrudeObject` 已接入独立属性区，当前支持：
+
+- 路径类型切换
+  - Line
+  - Cubic Bezier
+  - Ellipse
+  - Arc
+- 路径控制点编辑
+- 路径分段数 `Divisions`
+- 椭圆路径旋转角 `Rotation`
+- 起止角 `Start Angle / End Angle`
+- 截面轮廓顶点编辑
+- 轮廓顶点新增、重排和删除
+
+面板会分别对路径合法性和 profile 合法性给出提示，因此这一块已经不是静态演示，而是带基本约束和数据校验的编辑器能力。
+
+### 2.8 父子层级与重挂接
+
+`SceneController::setObjectParent` 当前已经支持：
+
+- 禁止对象挂到自己身上
+- 禁止形成循环父子关系
+- 重挂接时保持对象世界坐标不变
+- 重挂接时保持对象世界旋转不变
+- 重挂接后刷新层级树和渲染层父子关系
+
+这意味着项目已经具备基础的 scene graph 组织能力，而不是简单的平铺对象列表。
+
+### 2.9 3D 视图与交互
+
+中央区域通过 `Graph3dScene` 嵌入 `Qt3DWindow`，当前已接入：
+
+- Qt3D 场景根节点
 - 自定义 frame graph / renderer
+- 背景色设置
 - 双方向光照
 - 右下角坐标轴 gizmo
-- 相机控制
-- 对象创建、更新、删除
-- 选中对象高亮显示
+- 场景对象渲染节点同步
+- 对象选中高亮
+- `QObjectPicker` 驱动的对象点击选中
 
-当前 demo 的 6 类 primitive 都有自己的渲染节点：
+主窗口事件过滤器还处理了“点击空白区域取消选中”的交互逻辑，因此当前 3D 视图已经具备基本编辑器手感。
 
-- `BoxPrimitiveRenderNode`
-- `SpherePrimitiveRenderNode`
-- `CylinderPrimitiveRenderNode`
-- `ConePrimitiveRenderNode`
-- `LinePrimitiveRenderNode`
-- `RingPrimitiveRenderNode`
+### 2.10 相机能力
 
-这些节点已经会根据对象属性同步：
+`src/q3dextension/extras/camera_controller.*` 已接入主界面，当前支持：
 
-- 名称
-- 局部位移
-- 局部旋转
-- 尺寸
-- 颜色
-- 选中高亮状态
+- `Reset`
+- `XY`
+- `XZ`
+- `YZ`
+- `Fit`
 
-### 2.7 相机操作
-
-`src/q3dextension/extras/camera_controller.*` 中已经实现较完整的相机控制逻辑，当前主界面已接入：
-
-- Reset
-- XY
-- XZ
-- YZ
-- Fit
-
-同时支持鼠标交互：
+并支持常见鼠标交互：
 
 - 左键拖动旋转
 - 右键拖动平移
 - 滚轮缩放
-- 双键/组合轴输入缩放
 
-还支持平移/旋转方向反转配置。
+### 2.11 资源与界面细节
 
-### 2.8 资源与界面细节
+当前工程已经接入：
 
-工程当前还包含一些已接入资源：
-
-- 4 个 primitive toolbar 图标
-- Qt Linguist 翻译入口
+- 工具栏 SVG 图标资源
 - 主窗口样式表
+- Qt Linguist 翻译入口
 
-翻译基础设施已接入，但仓库中的 `qt3d-demo_zh_CN.ts` 目前仍比较初步。
+截图中可以看到，这套 UI 已经形成了比较完整的“左树 + 中视图 + 右属性”编辑器原型界面。
 
-## 3. 当前 demo 的数据与同步机制
+## 3. 数据流和同步机制
 
-### 3.1 Primitive 数据模型
+### 3.1 数据模型
 
-`PrimitiveObject` 继承自 `QObservableObject`，当前基础属性包括：
+场景对象统一基于 `SceneObject` / `PrimitiveObject` / `PolygonObject` / `ExtrudeObject` 组织。
+
+对象基础属性包括：
 
 - name
 - position
 - rotation
 - color
+- parent-child relationship
 
-不同子类再补充自己的尺寸属性。
+不同对象类型再扩展各自的尺寸、顶点、路径和 profile 数据。
 
-### 3.2 变更自动传播
+### 3.2 变更传播
 
-SceneController 与 SceneModel 已建立对象变化联动机制：
+当前项目已经形成一条较清晰的数据同步链路：
 
-- 对象属性变化会发出 `propertyChanged`
-- SceneController 把变化转成 `objectChanged`
-- PropertyPanel / Hierarchy 接收后刷新 UI
-- SceneModel 接收后刷新 RenderNode
+- 对象属性修改触发 `QObservableObject::propertyChanged`
+- `SceneController` 将变化上抛为 `objectChanged`
+- `Hierarchy` 和 `PropertyPanel` 刷新当前 UI
+- `SceneModel` / RenderNode 同步刷新 Qt3D 实体
 
-因此当前对象编辑属于“数据驱动 + 实时渲染同步”模式。
+因此主程序已经是“数据驱动 + 视图实时同步”的工作方式，而不是手工刷新每个控件。
 
 ### 3.3 选中态联动
 
-当前已经实现：
+当前选中状态可以从多个入口驱动：
 
-- 层级树驱动当前对象切换
-- SceneController 管理当前选中对象
-- SceneModel 对应 RenderNode 执行 select / deselect
-- 3D 材质在选中时显示更亮颜色
+- 左侧层级树
+- 顶部创建动作后的自动选中
+- 中央 3D 视图点击拾取
+- 空白点击取消选中
 
-## 4. 工程里已经具备的基础设施能力
+`SceneController` 统一管理当前对象，`SceneModel` 再负责渲染层的 select / deselect。
 
-这一部分不一定全部在当前 demo UI 中直接暴露，但代码已经存在，可复用价值很高。
+## 4. 仓库中的基础设施能力
+
+这一部分不一定全部在当前 demo UI 中直接暴露，但代码已经存在，并且已经和主程序形成连接。
 
 ### 4.1 可观察对象系统
 
-`src/core/observable_object.*` + `src/core/x_property.*` + `src/core/x_property_validator.*` 提供了一套自定义属性系统：
+`src/core/observable_object.*`、`src/core/x_property.*`、`src/core/x_property_validator.*` 提供了一套自定义属性系统，具备：
 
-- 基于 `QProperty` 的 `X_PROPERTY` 宏
-- 自动绑定 Qt Property / Bindable
 - 属性变化通知
-- 嵌套对象变化传播
-- 父子 observable 链接
-- shot 机制控制通知次数
-- guard 方式临时禁用/恢复通知
-- group change 机制把多次变更合并成一次通知
-- 属性校验器
-- 属性 deleter
-
-这套机制已经通过测试覆盖了大量场景，包括：
-
-- 基本属性读写
-- 嵌套对象传播
-- map/hash/list/pair 等容器
-- validator 逻辑
-- deleter 逻辑
+- 嵌套变化传播
+- validator 支持
 - grouped change 行为
+- 对象级别的通知控制
+
+这部分已经由 `tests/core` 中的 doctest 用例覆盖核心行为。
 
 ### 4.2 事件总线
 
-`src/core/event_bus.*` 提供了一套轻量事件总线系统，包含：
+`src/core/event_bus.*` 提供轻量事件总线能力，支持：
 
-- 全局发送事件
+- 发送事件
 - 异步投递事件
-- watch / unwatch 指定事件类型
-- `WithEventNotifier` / `EventNotifierT` 模板辅助类
-- 自动移除型事件过滤器 `SelfRemoveEventFilter`
-- 可携带泛型数据的 `GenericEvent`
+- watch / unwatch 事件类型
+- 泛型事件封装
 
-测试中已经覆盖：
-
-- QApplication 环境下事件转发
-- send / post 两种模式
-- 不同继承结构下 notifier 的工作方式
-- 自移除 event filter 行为
+目前这部分主要作为工程基础设施存在，并在核心测试中得到覆盖。
 
 ### 4.3 Qt3D 渲染节点体系
 
-`src/visualization/graph3d` 目录下已经形成一套比较完整的渲染抽象：
+`src/visualization/graph3d` 目录下已经形成了较清晰的渲染抽象，包括：
 
 - `SceneModel`
 - `RenderNodeFactory`
 - `RenderNode`
-- `RenderNodeEntity`
-- `ProxyRenderNode`
-- `Selectable`
-- `WithColor`
-- `WithMaterial`
-- `WithAlpha`
-
-当前这套体系已经支持：
-
-- 按对象类型注册渲染节点创建器
-- 为数据对象生成对应 Qt3D 实体
-- 对属性变化做增量更新
-- 节点删除清理
+- 渲染节点实体创建与更新
 - 渲染节点父子同步
-- 可选中对象的视觉反馈
-- 材质切换与附加
+- 选中态同步
 
-### 4.4 Qt3D 组件与渲染辅助能力
+当前主程序已经把这套机制接到了：
 
-现有 3D 扩展层还包括：
+- Box / Sphere / Cylinder / Cone / Line / Ring
+- Polygon
+- Extrude
 
-- `CustomRenderer`
-  - 自定义 clear color
-  - 主视口与 gizmo 视口
-  - gizmo anchor 定位
-  - debug overlay 开关
-- `LayerManager`
-  - 默认层、opaque、transparent 层管理
-  - layer 附加与拆卸
-- `GizmoAxis`
-  - 三轴 gizmo
-  - 轴颜色、镜像轴、轴名称、缩放等选项
-- `Text3dEntity`
-  - 3D 文本实体
-- `BehaviorComponent`
-  - 面向 RenderNode 的组件行为基类
-- `ColourNodeComponent`
-  - 材质颜色效果处理
-- `DrawOutlineComponent`
-  - 绘制轮廓
+### 4.4 曲线、几何与 shape 扩展
 
-### 4.5 通用几何体 / 曲线 / 形状扩展
-
-`src/q3dextension` 目录已经积累了较多底层几何工具：
+`src/q3dextension` 下已经沉淀出一批底层几何能力，例如：
 
 - 曲线
-  - `Curve`
   - `LineCurve`
-  - `EllipseCurve`
   - `ArcCurve`
+  - `EllipseCurve`
   - `BezierCurve`
-- 2D/轮廓形状
-  - `Shape`
-  - `TrapezoidShape`
-- 计算几何 / Qt3D 几何封装
+- 几何与网格
   - `LineGeometry` / `LineMesh`
-  - `PolygonGeometry` / `PolygonMesh`
   - `RingGeometry` / `RingMesh`
+  - `PolygonGeometry` / `PolygonMesh`
   - `ExtrudeShapeGeometry` / `ExtrudeShapeMesh`
   - `EdgeMesh`
+- 轮廓 / shape
+  - `Shape`
+  - `PolygonProfileShape`
+  - `TrapezoidShape`
 
-这部分说明工程并不只是当前 primitive demo，而是已经具备继续扩展更复杂几何对象的基础。
+这说明仓库已经为后续更复杂的对象类型预留了良好的基础。
 
-### 4.6 预留的更多 RenderNode 类型
+### 4.5 工具与辅助模块
 
-在 `src/visualization/graph3d/nodes` 下，除了 demo primitive 节点外，还已经实现/保留了通用渲染节点，例如：
-
-- `BoxRenderNode`
-- `CylinderRenderNode`
-- `PolygonRenderNode`
-- `RingRenderNode`
-- `LineRenderNode`
-- `TrapezoidRenderNode`
-- `EdgeRenderNode`
-- `BoxEdgeRenderNode`
-- `SourcePlaneWaveRenderNode`
-- `StructureRenderNode`
-- `FdtdRegionRenderNode`
-- `PortRenderNode`
-
-这些节点说明仓库中保留了更大业务域模型的渲染骨架，只是当前主程序没有全部接回。
-
-## 5. 工具与辅助能力
-
-工程里还包含一些通用辅助模块：
+仓库里还保留了多类辅助模块：
 
 - `src/utils/logging.*`
-  - 控制台 / 文件日志处理器
 - `src/utils/crash_handler.*`
-  - crash handler 封装
 - `src/utils/color_util.*`
-  - 颜色运算辅助
 - `src/utils/compare_util.*`
-  - 浮点比较辅助
 - `src/utils/collection_util.*`
-  - 集合工具
 - `src/core/profiler.*`
-  - profiler 相关代码
+- `bin/breakpad/*`
 
-此外仓库还保留了 breakpad 辅助脚本和说明，说明崩溃符号/堆栈分析链路已有一定准备。
+这些内容表明项目在调试、崩溃处理和辅助工具链方面也已经做了一定准备。
 
-## 6. 构建与测试现状
+## 5. 构建与测试现状
 
-### 6.1 构建系统
+### 5.1 构建系统
 
-工程已经具备：
+工程当前具备：
 
 - CMake 主工程
 - CMake Presets
 - 可选 vcpkg 集成
-- 可选 breakpad 集成
+- 可选 Breakpad 集成
 - Qt Linguist 翻译生成
 - 可选测试构建开关
 
-关键开关：
+关键开关包括：
 
 - `QT3D_DEMO_USE_VCPKG`
 - `QT3D_DEMO_ENABLE_BREAKPAD`
 - `QT3D_DEMO_BUILD_TESTS`
 
-### 6.2 测试
+### 5.2 测试覆盖
 
-当前 `tests` 目录已经有 doctest 测试工程，主要覆盖核心基础层：
+当 `QT3D_DEMO_BUILD_TESTS=ON` 时，当前仓库会构建：
 
-- `observable_test.cpp`
-- `event_bus_test.cpp`
+- `render_node_test`
+- `property_panel_test`
+- `core_test`（前提是 `doctest` 包可用）
 
-也就是说，当前测试主要针对“框架能力”，不是 GUI 自动化测试。
+从现有测试内容看，覆盖重点包括：
 
-## 7. 当前边界与未见实现的内容
+- 渲染节点删除行为
+- 属性面板编辑器行为
+- 删除对象确认逻辑
+- observable / event bus 等核心基础设施
 
-从当前代码看，下面这些能力尚未在主程序中看到完整实现：
+当前还没有 GUI 自动化或端到端测试。
+
+## 6. 当前边界和未见实现内容
 
 - 场景保存 / 加载
 - 文件导入 / 导出
 - 撤销 / 重做
-- 3D 视图直接拾取对象
 - 多选与框选
 - 复制 / 粘贴对象
-- 动画时间轴或关键帧编辑
-- 面向最终业务模型的完整编辑器接入
+- 时间轴 / 动画编辑
+- 更完整的业务对象体系接入
 - GUI 自动化测试
 
-换句话说，当前仓库已经有较扎实的 3D 编辑器骨架和基础设施，但主程序仍主要是一个 primitive 编辑 demo。
-
-## 8. 一句话总结
-
-当前工程已经不是一个“空壳 Qt3D 工程”，而是一个包含以下内容的可运行原型：
-
-- 一个可交互的 primitive 场景编辑器
-- 一套可观察对象与属性系统
-- 一套可复用的事件总线
-- 一套较完整的 Qt3D 渲染节点与组件体系
-- 一批通用几何、曲线、图元扩展
-- 基础测试、构建与资源组织能力
-
-如果后续继续开发，这个仓库已经具备作为小型 3D 编辑器或领域建模工具原型底座的条件。

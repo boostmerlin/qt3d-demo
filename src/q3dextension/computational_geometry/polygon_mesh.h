@@ -23,13 +23,12 @@ public:
 
     void setPolygon(const QList<QPointF> &vertices);
 
-    void setResolution(float resolution);
+    void setResolution(float resolution) const;
 
     void setHeight(float height);
 
     void setRings(uint rings);
 
-    void setValidateVertices(bool validateVertices) const;
 signals:
     void meshChanged(const PolygonMesh* mesh) const;
 private:

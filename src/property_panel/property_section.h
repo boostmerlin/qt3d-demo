@@ -6,8 +6,6 @@
 
 class PropertySection : public QWidget
 {
-    Q_OBJECT
-
 public:
     explicit PropertySection(QWidget *parent = nullptr)
         : QWidget(parent)

@@ -1,12 +1,32 @@
 #include <QComboBox>
 #include <QDoubleSpinBox>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QSignalSpy>
+#include <QTimer>
 #include <QtTest/QtTest>
 
 #include "property_panel/editors/enum_editor.h"
 #include "property_panel/editors/reorderable_point_list_editor.h"
 #include "property_panel/editors/vector3_editor.h"
+#include "property_panel/sections/object_section.h"
+#include "scene/scene_object.h"
+
+class TestSceneObject final : public SceneObject
+{
+    Q_OBJECT
+
+public:
+    explicit TestSceneObject(QObject *parent = nullptr)
+        : SceneObject(parent)
+    {
+    }
+
+    [[nodiscard]] QString typeName() const override
+    {
+        return QStringLiteral("Test Object");
+    }
+};
 
 class PropertyPanelEditorTest final : public QObject
 {
@@ -19,6 +39,8 @@ private slots:
     void enumEditorSelectsItemByValue();
     void pointListEditorEmitsPointEdited();
     void pointListEditorEmitsAddRequested();
+    void objectSectionOnlyEmitsRemoveAfterConfirmation();
+    void objectSectionDoesNotEmitRemoveWhenDialogCancelled();
 };
 
 void PropertyPanelEditorTest::vector3EditorEmitsCombinedVector()
@@ -132,6 +154,69 @@ void PropertyPanelEditorTest::pointListEditorEmitsAddRequested()
     button->click();
 
     QCOMPARE(spy.count(), 1);
+}
+
+static QPushButton *findButtonByText(QWidget *root, const QString &text)
+{
+    for (auto *button : root->findChildren<QPushButton *>()) {
+        if (button->text() == text) {
+            return button;
+        }
+    }
+    return nullptr;
+}
+
+void PropertyPanelEditorTest::objectSectionOnlyEmitsRemoveAfterConfirmation()
+{
+    ObjectSection section;
+    TestSceneObject object;
+    object.setName(QStringLiteral("Cube A"));
+    section.setCurrentObject(&object);
+
+    QSignalSpy spy(&section, &ObjectSection::removeRequested);
+    QVERIFY(spy.isValid());
+
+    auto *deleteButton = findButtonByText(&section, QStringLiteral("Delete Object"));
+    QVERIFY(deleteButton != nullptr);
+
+    QTimer::singleShot(0, [] {
+        auto *dialog = qobject_cast<QMessageBox *>(QApplication::activeModalWidget());
+        QVERIFY(dialog != nullptr);
+        auto *button = dialog->button(QMessageBox::Yes);
+        QVERIFY(button != nullptr);
+        button->click();
+    });
+
+    deleteButton->click();
+
+    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.at(0).at(0).value<SceneObject *>(), static_cast<SceneObject *>(&object));
+}
+
+void PropertyPanelEditorTest::objectSectionDoesNotEmitRemoveWhenDialogCancelled()
+{
+    ObjectSection section;
+    TestSceneObject object;
+    object.setName(QStringLiteral("Cube B"));
+    section.setCurrentObject(&object);
+
+    QSignalSpy spy(&section, &ObjectSection::removeRequested);
+    QVERIFY(spy.isValid());
+
+    auto *deleteButton = findButtonByText(&section, QStringLiteral("Delete Object"));
+    QVERIFY(deleteButton != nullptr);
+
+    QTimer::singleShot(0, [] {
+        auto *dialog = qobject_cast<QMessageBox *>(QApplication::activeModalWidget());
+        QVERIFY(dialog != nullptr);
+        auto *button = dialog->button(QMessageBox::Cancel);
+        QVERIFY(button != nullptr);
+        button->click();
+    });
+
+    deleteButton->click();
+
+    QCOMPARE(spy.count(), 0);
 }
 
 QTEST_MAIN(PropertyPanelEditorTest)
