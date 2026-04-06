@@ -3,7 +3,7 @@
 #include <Qt3DExtras/QConeMesh>
 
 #include "primitive_object.h"
-#include "core/render_node.h"
+#include "nodes/render_node.h"
 
 class PrimitiveRenderNodeBase : public RenderNodeEntityMix<WithMaterial, Selectable> {
     Q_OBJECT

@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QPointer>
 
-#include "demo/scene_object.h"
+#include "scene/scene_object.h"
 
 class QModelIndex;
 class QStandardItem;

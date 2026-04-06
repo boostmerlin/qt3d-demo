@@ -8,18 +8,22 @@ set(DOCTEST_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 #    message("doctest download status: ${status}")
 #endif ()
 
-find_package(doctest CONFIG REQUIRED)
+find_package(Qt6 REQUIRED COMPONENTS Test)
+add_subdirectory(property_panel)
 
-add_library(common INTERFACE)
+find_package(doctest CONFIG QUIET)
+if (doctest_FOUND)
+    add_library(common INTERFACE)
 
-target_include_directories(common INTERFACE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>
-)
+    target_include_directories(common INTERFACE
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>
+    )
 
-target_link_libraries(common INTERFACE
-        doctest::doctest
-        Qt${QT_VERSION_MAJOR}::Widgets
-)
+    target_link_libraries(common INTERFACE
+            doctest::doctest
+            Qt${QT_VERSION_MAJOR}::Widgets
+    )
 
-add_subdirectory(core)
+    add_subdirectory(core)
+endif ()

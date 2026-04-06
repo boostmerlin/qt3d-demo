@@ -1,7 +1,7 @@
 #pragma once
 
 #include "polygon_object.h"
-#include "core/render_node.h"
+#include "nodes/render_node.h"
 
 class PolygonRenderNode final : public RenderNodeEntityMix<WithMaterial, Selectable> {
     Q_OBJECT

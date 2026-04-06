@@ -1,8 +1,10 @@
 #pragma once
 
 #include "extrude_object.h"
-#include "core/render_node.h"
+#include "nodes/render_node.h"
+#include "q3dextension/curves/arc_curve.h"
 #include "q3dextension/curves/bezier_curve.h"
+#include "q3dextension/curves/ellipse_curve.h"
 #include "q3dextension/curves/line_curve.h"
 #include "q3dextension/shapes/polygon_profile_shape.h"
 
@@ -31,6 +33,8 @@ private:
     const ExtrudeObject *m_extrude{};
     LineCurve *m_lineCurve{};
     CubicBezierCurve *m_bezierCurve{};
+    EllipseCurve *m_ellipseCurve{};
+    ArcCurve *m_arcCurve{};
     PolygonProfileShape *m_profileShape{};
     bool m_selected = false;
 };

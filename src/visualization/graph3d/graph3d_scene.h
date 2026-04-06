@@ -7,7 +7,7 @@
 
 #include <Qt3DExtras/Qt3DWindow>
 #include <QPointer>
-#include "core/render_node.h"
+#include "nodes/render_node.h"
 #include "camera_controller.h"
 #include "scene_model.h"
 #include "custom_renderer.h"

@@ -5,7 +5,6 @@
 #include "scene_object.h"
 
 using ExtrudePathControlPoints = QList<QVector2D>;
-Q_DECLARE_METATYPE(ExtrudePathControlPoints)
 
 using ExtrudeProfileVertices = QList<QVector2D>;
 
@@ -16,6 +15,8 @@ public:
     enum class PathType {
         Line,
         CubicBezier,
+        Ellipse,
+        Arc,
     };
     Q_ENUM(PathType)
 
@@ -25,6 +26,9 @@ public:
     X_PROPERTY_4(ExtrudePathControlPoints, pathControlPoints, pathControlPoints, setPathControlPoints)
     X_PROPERTY_4(ExtrudeProfileVertices, profileVertices, profileVertices, setProfileVertices)
     X_PROPERTY_4(uint, pathDivisions, pathDivisions, setPathDivisions)
+    X_PROPERTY_4(float, ellipseRotationDegrees, ellipseRotationDegrees, setEllipseRotationDegrees)
+    X_PROPERTY_4(float, pathStartAngleDegrees, pathStartAngleDegrees, setPathStartAngleDegrees)
+    X_PROPERTY_4(float, pathEndAngleDegrees, pathEndAngleDegrees, setPathEndAngleDegrees)
 
 public:
     [[nodiscard]] QString typeName() const override;

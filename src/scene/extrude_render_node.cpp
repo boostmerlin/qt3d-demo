@@ -6,6 +6,7 @@
 
 #include "q3dextension/computational_geometry/extrude_shape_mesh.h"
 #include "q3dextension/curves/bezier_curve.h"
+#include "q3dextension/curves/ellipse_curve.h"
 #include "q3dextension/curves/line_curve.h"
 #include "q3dextension/shapes/polygon_profile_shape.h"
 
@@ -18,6 +19,15 @@ QPolygonF toPolygon(const ExtrudeProfileVertices &vertices)
         polygon.append(QPointF(vertex.x(), vertex.y()));
     }
     return polygon;
+}
+
+float sweepAngleDegrees(float startAngleDegrees, float endAngleDegrees)
+{
+    float sweep = endAngleDegrees - startAngleDegrees;
+    if (sweep < 0.0f) {
+        sweep += 360.0f;
+    }
+    return sweep;
 }
 }
 
@@ -54,6 +64,10 @@ void ExtrudeRenderNode::onCreate()
     m_lineCurve->setParent(this);
     m_bezierCurve = new CubicBezierCurve();
     m_bezierCurve->setParent(this);
+    m_ellipseCurve = new EllipseCurve();
+    m_ellipseCurve->setParent(this);
+    m_arcCurve = new ArcCurve();
+    m_arcCurve->setParent(this);
     m_profileShape = new PolygonProfileShape(this);
 
     attachMaterial();
@@ -87,6 +101,26 @@ void ExtrudeRenderNode::onUpdate()
         m_bezierCurve->setControlPoints(pathPoints);
         m_bezierCurve->setDivisions(m_extrude->pathDivisions());
         currentCurve = m_bezierCurve;
+        break;
+    case ExtrudeObject::PathType::Ellipse:
+        m_ellipseCurve->setCenter(pathPoints[0]);
+        m_ellipseCurve->setMajorRadius(pathPoints[1].x());
+        m_ellipseCurve->setMinorRadius(pathPoints[1].y());
+        m_ellipseCurve->setStartAngleInDegrees(m_extrude->pathStartAngleDegrees());
+        m_ellipseCurve->setSweepAngleInDegrees(sweepAngleDegrees(m_extrude->pathStartAngleDegrees(),
+                                                                 m_extrude->pathEndAngleDegrees()));
+        m_ellipseCurve->setRotationInDegrees(m_extrude->ellipseRotationDegrees());
+        m_ellipseCurve->setDivisions(m_extrude->pathDivisions());
+        currentCurve = m_ellipseCurve;
+        break;
+    case ExtrudeObject::PathType::Arc:
+        m_arcCurve->setCenter(pathPoints[0]);
+        m_arcCurve->setRadius(pathPoints[1].x());
+        m_arcCurve->setStartAngleInDegrees(m_extrude->pathStartAngleDegrees());
+        m_arcCurve->setSweepAngleInDegrees(sweepAngleDegrees(m_extrude->pathStartAngleDegrees(),
+                                                             m_extrude->pathEndAngleDegrees()));
+        m_arcCurve->setDivisions(m_extrude->pathDivisions());
+        currentCurve = m_arcCurve;
         break;
     }
 

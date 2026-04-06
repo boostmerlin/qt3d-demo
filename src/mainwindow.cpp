@@ -11,10 +11,10 @@
 #include <QToolBar>
 #include <QVBoxLayout>
 
-#include "demo/polygon_object.h"
-#include "demo/scene_object.h"
-#include "demo/primitive_object.h"
-#include "demo/scene_controller.h"
+#include "scene/polygon_object.h"
+#include "scene/scene_object.h"
+#include "scene/primitive_object.h"
+#include "scene/scene_controller.h"
 #include "hierarchy.h"
 #include "mainwindow.h"
 #include "property_panel.h"

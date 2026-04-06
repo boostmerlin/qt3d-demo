@@ -8,6 +8,18 @@ namespace {
 constexpr float DefaultProfileRadius = 0.45f;
 constexpr uint DefaultLineDivisions = 1;
 constexpr uint DefaultCubicBezierDivisions = 24;
+constexpr uint DefaultEllipseDivisions = 48;
+constexpr uint DefaultArcDivisions = 32;
+
+bool requiresAngleControls(ExtrudeObject::PathType pathType)
+{
+    return pathType == ExtrudeObject::PathType::Ellipse || pathType == ExtrudeObject::PathType::Arc;
+}
+
+bool requiresRotationControl(ExtrudeObject::PathType pathType)
+{
+    return pathType == ExtrudeObject::PathType::Ellipse;
+}
 
 int requiredPathControlPointCount(ExtrudeObject::PathType pathType)
 {
@@ -16,6 +28,10 @@ int requiredPathControlPointCount(ExtrudeObject::PathType pathType)
         return 2;
     case ExtrudeObject::PathType::CubicBezier:
         return 4;
+    case ExtrudeObject::PathType::Ellipse:
+        return 2;
+    case ExtrudeObject::PathType::Arc:
+        return 2;
     }
     return 0;
 }
@@ -32,6 +48,16 @@ ExtrudePathControlPoints defaultPathControlPoints(ExtrudeObject::PathType pathTy
             QVector2D(0.35f, -0.7f),
             QVector2D(1.0f, 0.0f),
         };
+    case ExtrudeObject::PathType::Ellipse:
+        return {
+            QVector2D(0.0f, 0.0f),
+            QVector2D(1.0f, 0.65f),
+        };
+    case ExtrudeObject::PathType::Arc:
+        return {
+            QVector2D(0.0f, 0.0f),
+            QVector2D(1.0f, 0.0f),
+        };
     }
     return {};
 }
@@ -43,6 +69,10 @@ uint defaultPathDivisions(ExtrudeObject::PathType pathType)
         return DefaultLineDivisions;
     case ExtrudeObject::PathType::CubicBezier:
         return DefaultCubicBezierDivisions;
+    case ExtrudeObject::PathType::Ellipse:
+        return DefaultEllipseDivisions;
+    case ExtrudeObject::PathType::Arc:
+        return DefaultArcDivisions;
     }
     return DefaultLineDivisions;
 }
@@ -100,7 +130,8 @@ ExtrudeObject::ExtrudeObject(QObject *parent)
     : SceneObject(parent)
 {
     setPathTypeValidator([](const PathType &value, const QObservableObject *) {
-        return value == PathType::Line || value == PathType::CubicBezier;
+        return value == PathType::Line || value == PathType::CubicBezier || value == PathType::Ellipse
+               || value == PathType::Arc;
     });
     setPathControlPointsValidator([](const ExtrudePathControlPoints &value, const QObservableObject *owner) {
         const auto *extrude = qobject_cast<const ExtrudeObject *>(owner);
@@ -116,9 +147,21 @@ ExtrudeObject::ExtrudeObject(QObject *parent)
     setPathDivisionsValidator([](const uint &value, const QObservableObject *) {
         return value >= 1 && value <= 128;
     });
+    setEllipseRotationDegreesValidator([](const float &, const QObservableObject *) {
+        return true;
+    });
+    setPathStartAngleDegreesValidator([](const float &, const QObservableObject *) {
+        return true;
+    });
+    setPathEndAngleDegreesValidator([](const float &, const QObservableObject *) {
+        return true;
+    });
 
     setColor(QColor(0x0f, 0x76, 0xe4));
     setProfileVertices(regularProfileVertices(3));
+    setEllipseRotationDegrees(0.0f);
+    setPathStartAngleDegrees(0.0f);
+    setPathEndAngleDegrees(360.0f);
     setPathType(PathType::Line);
     observableChain(false);
 }
@@ -136,6 +179,13 @@ bool ExtrudeObject::hasValidPath() const
     }
     if (pathType() == PathType::Line) {
         return !approxEqual(points[0], points[1]);
+    }
+    if (pathType() == PathType::Ellipse) {
+        return points[1].x() > FLOAT_EPSILON && points[1].y() > FLOAT_EPSILON
+               && !approxEqual(pathStartAngleDegrees(), pathEndAngleDegrees());
+    }
+    if (pathType() == PathType::Arc) {
+        return points[1].x() > FLOAT_EPSILON && !approxEqual(pathStartAngleDegrees(), pathEndAngleDegrees());
     }
     return true;
 }
@@ -180,6 +230,13 @@ void ExtrudeObject::afterPropertySet(const char *name)
         beginGroupChange();
         setPathControlPoints(defaultPathControlPoints(pathType()));
         setPathDivisions(defaultPathDivisions(pathType()));
+        if (requiresRotationControl(pathType())) {
+            setEllipseRotationDegrees(0.0f);
+        }
+        if (requiresAngleControls(pathType())) {
+            setPathStartAngleDegrees(0.0f);
+            setPathEndAngleDegrees(360);
+        }
         endGroupChange();
     }
 }

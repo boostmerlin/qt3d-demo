@@ -5,7 +5,6 @@
 #include "scene_object.h"
 
 using PolygonVertices = QList<QVector3D>;
-Q_DECLARE_METATYPE(PolygonVertices)
 
 class PolygonObject final : public SceneObject {
     Q_OBJECT

@@ -3,7 +3,7 @@
 #include <QPhongMaterial>
 
 #include "primitive_object.h"
-#include "core/render_node.h"
+#include "nodes/render_node.h"
 
 class EdgeGeometryRenderNode : public RenderNodeEntityMix<WithMaterial, WithColor> {
 public:

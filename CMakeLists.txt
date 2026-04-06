@@ -4,7 +4,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 project(qt3d-demo VERSION 0.1 LANGUAGES CXX)
 
-option(QT3D_DEMO_USE_VCPKG "Enable vcpkg toolchain integration" OFF)
+option(QT3D_DEMO_USE_VCPKG "Enable vcpkg toolchain integration" ON)
 option(QT3D_DEMO_ENABLE_BREAKPAD "Link Breakpad support" OFF)
 option(QT3D_DEMO_BUILD_TESTS "Build test targets" OFF)
 
@@ -34,6 +34,35 @@ set(PROJECT_SOURCES
         src/hierarchy.h
         src/property_panel.cpp
         src/property_panel.h
+        src/property_panel/property_section.h
+        src/property_panel/property_editor_factory.cpp
+        src/property_panel/property_editor_factory.h
+        src/property_panel/editors/text_editor_row.cpp
+        src/property_panel/editors/text_editor_row.h
+        src/property_panel/editors/double_editor_row.cpp
+        src/property_panel/editors/double_editor_row.h
+        src/property_panel/editors/int_editor_row.cpp
+        src/property_panel/editors/int_editor_row.h
+        src/property_panel/editors/enum_editor.cpp
+        src/property_panel/editors/enum_editor.h
+        src/property_panel/editors/vector3_editor.cpp
+        src/property_panel/editors/vector3_editor.h
+        src/property_panel/editors/color_editor.cpp
+        src/property_panel/editors/color_editor.h
+        src/property_panel/editors/reorderable_point_list_editor.cpp
+        src/property_panel/editors/reorderable_point_list_editor.h
+        src/property_panel/sections/object_section.cpp
+        src/property_panel/sections/object_section.h
+        src/property_panel/sections/transform_section.cpp
+        src/property_panel/sections/transform_section.h
+        src/property_panel/sections/primitive_dimensions_section.cpp
+        src/property_panel/sections/primitive_dimensions_section.h
+        src/property_panel/sections/line_section.cpp
+        src/property_panel/sections/line_section.h
+        src/property_panel/sections/polygon_section.cpp
+        src/property_panel/sections/polygon_section.h
+        src/property_panel/sections/extrude_section.cpp
+        src/property_panel/sections/extrude_section.h
         src/core/observable_object.cpp
         src/core/observable_object.h
         src/core/x_property.cpp
@@ -72,6 +101,10 @@ set(PROJECT_SOURCES
         src/q3dextension/curves/curve.h
         src/q3dextension/curves/line_curve.cpp
         src/q3dextension/curves/line_curve.h
+        src/q3dextension/curves/arc_curve.cpp
+        src/q3dextension/curves/arc_curve.h
+        src/q3dextension/curves/ellipse_curve.cpp
+        src/q3dextension/curves/ellipse_curve.h
         src/q3dextension/curves/bezier_curve.cpp
         src/q3dextension/curves/bezier_curve.h
         src/q3dextension/curves/bezier_curve.tpp
@@ -85,27 +118,26 @@ set(PROJECT_SOURCES
         src/visualization/graph3d/render_node_factory.h
         src/visualization/graph3d/scene_model.cpp
         src/visualization/graph3d/scene_model.h
-        src/visualization/graph3d/core/render_node.cpp
-        src/visualization/graph3d/core/render_node.h
-        src/property_panel.cpp
+        src/visualization/graph3d/nodes/render_node.cpp
+        src/visualization/graph3d/nodes/render_node.h
         src/property_panel.h
-        src/demo/scene_object.cpp
-        src/demo/scene_object.h
-        src/demo/edge_render_node.cpp
-        src/demo/extrude_object.cpp
-        src/demo/extrude_object.h
-        src/demo/extrude_render_node.cpp
-        src/demo/extrude_render_node.h
-        src/demo/polygon_object.cpp
-        src/demo/polygon_object.h
-        src/demo/polygon_render_node.cpp
-        src/demo/polygon_render_node.h
-        src/demo/primitive_object.cpp
-        src/demo/primitive_object.h
-        src/demo/primitive_render_node.cpp
-        src/demo/primitive_render_node.h
-        src/demo/scene_controller.cpp
-        src/demo/scene_controller.h
+        src/scene/scene_object.cpp
+        src/scene/scene_object.h
+        src/scene/edge_render_node.cpp
+        src/scene/extrude_object.cpp
+        src/scene/extrude_object.h
+        src/scene/extrude_render_node.cpp
+        src/scene/extrude_render_node.h
+        src/scene/polygon_object.cpp
+        src/scene/polygon_object.h
+        src/scene/polygon_render_node.cpp
+        src/scene/polygon_render_node.h
+        src/scene/primitive_object.cpp
+        src/scene/primitive_object.h
+        src/scene/primitive_render_node.cpp
+        src/scene/primitive_render_node.h
+        src/scene/scene_controller.cpp
+        src/scene/scene_controller.h
         src/q3dextension/computational_geometry/polygon_geometry.cpp
         src/q3dextension/computational_geometry/polygon_geometry.h
         src/q3dextension/computational_geometry/polygon_mesh.cpp
@@ -114,7 +146,7 @@ set(PROJECT_SOURCES
 
 if(WIN32)
     if (MSVC)
-        add_compile_options(/bigobj)
+        add_compile_options(/bigobj /FS)
     else()
         add_compile_options(-Wa,-mbig-obj)
     endif()
@@ -142,14 +174,14 @@ target_link_libraries(qt3d-demo PRIVATE
 target_include_directories(qt3d-demo PRIVATE
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/src/core
-        ${CMAKE_SOURCE_DIR}/src/demo
+        ${CMAKE_SOURCE_DIR}/src/scene
         ${CMAKE_SOURCE_DIR}/src/utils
         ${CMAKE_SOURCE_DIR}/src/q3dextension/extras
         ${CMAKE_SOURCE_DIR}/src/q3dextension/utils
         ${CMAKE_SOURCE_DIR}/src/q3dextension/curves
         ${CMAKE_SOURCE_DIR}/src/q3dextension/shapes
         ${CMAKE_SOURCE_DIR}/src/visualization/graph3d
-        ${CMAKE_SOURCE_DIR}/src/visualization/graph3d/core
+        ${CMAKE_SOURCE_DIR}/src/visualization/graph3d/nodes
 )
 
 if (QT3D_DEMO_ENABLE_BREAKPAD)
