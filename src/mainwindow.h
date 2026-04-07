@@ -13,9 +13,11 @@ class MainWindow;
 QT_END_NAMESPACE
 
 class Graph3dScene;
+class QAction;
 class QEvent;
 class Hierarchy;
 class PropertyPanel;
+class QMenu;
 class QSplitter;
 class SceneController;
 class QWidget;
@@ -43,8 +45,12 @@ private:
     bool m_sceneClickPending = false;
     bool m_sceneClickMoved = false;
     bool m_scenePickHandled = false;
+    QMenu *m_editMenu{};
+    QAction *m_undoAction{};
+    QAction *m_redoAction{};
 
     void createActions();
+    void createMenuActions();
     void addPrimitiveButton(const QString &label, int type, const QString &iconName = QString());
     void addToolbarButton(const QString &label,
                           const QString &iconName,

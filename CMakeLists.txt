@@ -123,6 +123,10 @@ set(PROJECT_SOURCES
         src/property_panel.h
         src/scene/scene_object.cpp
         src/scene/scene_object.h
+        src/scene/scene_snapshot.cpp
+        src/scene/scene_snapshot.h
+        src/scene/scene_commands.cpp
+        src/scene/scene_commands.h
         src/scene/edge_render_node.cpp
         src/scene/extrude_object.cpp
         src/scene/extrude_object.h

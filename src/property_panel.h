@@ -7,13 +7,14 @@
 class QLabel;
 class ObjectSection;
 class PropertySection;
+class SceneController;
 
 class PropertyPanel final : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit PropertyPanel(QWidget *parent = nullptr);
+    explicit PropertyPanel(SceneController *sceneController = nullptr, QWidget *parent = nullptr);
 
     void setObjects(const QList<SceneObject *> &objects);
     void setCurrentObject(SceneObject *object);

@@ -6,9 +6,10 @@
 #include "scene/primitive_object.h"
 #include "property_panel/editors/enum_editor.h"
 #include "property_panel/property_editor_factory.h"
+#include "scene/scene_controller.h"
 
-LineSection::LineSection(QWidget *parent)
-    : PropertySection(parent)
+LineSection::LineSection(SceneController *sceneController, QWidget *parent)
+    : PropertySection(sceneController, parent)
 {
     auto *layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -26,8 +27,8 @@ LineSection::LineSection(QWidget *parent)
     });
     layout->addWidget(m_lineTypeEditor);
     connect(m_lineTypeEditor, &EnumEditor::valueEdited, this, [this](const QVariant &value) {
-        if (!m_updating && m_currentObject) {
-            m_currentObject->setLineType(LineGeometry::LineType(value.toInt()));
+        if (!m_updating && m_currentObject && m_sceneController) {
+            m_sceneController->setLineType(m_currentObject, LineGeometry::LineType(value.toInt()));
         }
     });
 }

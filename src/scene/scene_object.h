@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QColor>
+#include <QUuid>
 #include <QVector3D>
 
 #include "observable_object.h"
@@ -18,8 +19,13 @@ public:
     X_PROPERTY_4(QColor, color, color, setColor)
 
 public:
+    [[nodiscard]] const QUuid &id() const;
     [[nodiscard]] virtual QString typeName() const = 0;
     [[nodiscard]] SceneObject *parentSceneObject() const;
     [[nodiscard]] QList<SceneObject *> childSceneObjects() const;
     [[nodiscard]] bool isAncestorOf(const SceneObject *object) const;
+    void restoreId(const QUuid &id);
+
+private:
+    QUuid m_id;
 };

@@ -15,7 +15,7 @@ class PolygonSection final : public PropertySection
     Q_OBJECT
 
 public:
-    explicit PolygonSection(QWidget *parent = nullptr);
+    explicit PolygonSection(SceneController *sceneController = nullptr, QWidget *parent = nullptr);
 
     void setObjects(const QList<SceneObject *> &objects) override;
     void setCurrentObject(SceneObject *object) override;

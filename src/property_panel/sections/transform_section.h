@@ -11,7 +11,7 @@ class TransformSection final : public PropertySection
     Q_OBJECT
 
 public:
-    explicit TransformSection(QWidget *parent = nullptr);
+    explicit TransformSection(SceneController *sceneController = nullptr, QWidget *parent = nullptr);
 
     void setObjects(const QList<SceneObject *> &objects) override;
     void setCurrentObject(SceneObject *object) override;

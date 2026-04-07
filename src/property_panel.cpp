@@ -12,7 +12,7 @@
 #include "property_panel/sections/primitive_dimensions_section.h"
 #include "property_panel/sections/transform_section.h"
 
-PropertyPanel::PropertyPanel(QWidget *parent)
+PropertyPanel::PropertyPanel(SceneController *sceneController, QWidget *parent)
     : QWidget(parent)
 {
     auto *wrapperLayout = new QVBoxLayout(this);
@@ -47,12 +47,12 @@ PropertyPanel::PropertyPanel(QWidget *parent)
     contentLayout->setSpacing(14);
     scrollLayout->addWidget(m_propertyContentWidget);
 
-    m_objectSection = new ObjectSection(m_propertyContentWidget);
-    auto *lineSection = new LineSection(m_propertyContentWidget);
-    auto *transformSection = new TransformSection(m_propertyContentWidget);
-    auto *dimensionsSection = new PrimitiveDimensionsSection(m_propertyContentWidget);
-    auto *polygonSection = new PolygonSection(m_propertyContentWidget);
-    auto *extrudeSection = new ExtrudeSection(m_propertyContentWidget);
+    m_objectSection = new ObjectSection(sceneController, m_propertyContentWidget);
+    auto *lineSection = new LineSection(sceneController, m_propertyContentWidget);
+    auto *transformSection = new TransformSection(sceneController, m_propertyContentWidget);
+    auto *dimensionsSection = new PrimitiveDimensionsSection(sceneController, m_propertyContentWidget);
+    auto *polygonSection = new PolygonSection(sceneController, m_propertyContentWidget);
+    auto *extrudeSection = new ExtrudeSection(sceneController, m_propertyContentWidget);
 
     m_sections = {m_objectSection, lineSection, transformSection, dimensionsSection, polygonSection, extrudeSection};
     for (auto *section : m_sections) {

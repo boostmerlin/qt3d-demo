@@ -9,9 +9,10 @@
 #include "property_panel/editors/int_editor_row.h"
 #include "property_panel/editors/reorderable_point_list_editor.h"
 #include "property_panel/property_editor_factory.h"
+#include "scene/scene_controller.h"
 
-ExtrudeSection::ExtrudeSection(QWidget *parent)
-    : PropertySection(parent)
+ExtrudeSection::ExtrudeSection(SceneController *sceneController, QWidget *parent)
+    : PropertySection(sceneController, parent)
 {
     auto *layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -34,8 +35,9 @@ ExtrudeSection::ExtrudeSection(QWidget *parent)
     });
     layout->addWidget(m_pathTypeEditor);
     connect(m_pathTypeEditor, &EnumEditor::valueEdited, this, [this](const QVariant &value) {
-        if (m_updating || !m_currentObject
-            || !m_currentObject->setPathType(static_cast<ExtrudeObject::PathType>(value.toInt()))) {
+        if (m_updating || !m_currentObject || !m_sceneController
+            || !m_sceneController->setExtrudePathType(m_currentObject,
+                                                      static_cast<ExtrudeObject::PathType>(value.toInt()))) {
             refreshEditors();
         }
     });
@@ -44,7 +46,8 @@ ExtrudeSection::ExtrudeSection(QWidget *parent)
     m_divisionsEditor->setRange(1, 128);
     layout->addWidget(m_divisionsEditor);
     connect(m_divisionsEditor, &IntEditorRow::valueEdited, this, [this](int value) {
-        if (m_updating || !m_currentObject || !m_currentObject->setPathDivisions(uint(value))) {
+        if (m_updating || !m_currentObject || !m_sceneController
+            || !m_sceneController->setExtrudePathDivisions(m_currentObject, uint(value))) {
             refreshEditors();
         }
     });
@@ -54,7 +57,8 @@ ExtrudeSection::ExtrudeSection(QWidget *parent)
     m_rotationEditor->setSingleStep(5.0);
     layout->addWidget(m_rotationEditor);
     connect(m_rotationEditor, &DoubleEditorRow::valueEdited, this, [this](double value) {
-        if (m_updating || !m_currentObject || !m_currentObject->setEllipseRotationDegrees(float(value))) {
+        if (m_updating || !m_currentObject || !m_sceneController
+            || !m_sceneController->setExtrudeEllipseRotation(m_currentObject, float(value))) {
             refreshEditors();
         }
     });
@@ -64,7 +68,8 @@ ExtrudeSection::ExtrudeSection(QWidget *parent)
     m_startAngleEditor->setSingleStep(5.0);
     layout->addWidget(m_startAngleEditor);
     connect(m_startAngleEditor, &DoubleEditorRow::valueEdited, this, [this](double value) {
-        if (m_updating || !m_currentObject || !m_currentObject->setPathStartAngleDegrees(float(value))) {
+        if (m_updating || !m_currentObject || !m_sceneController
+            || !m_sceneController->setExtrudePathStartAngle(m_currentObject, float(value))) {
             refreshEditors();
         }
     });
@@ -74,7 +79,8 @@ ExtrudeSection::ExtrudeSection(QWidget *parent)
     m_endAngleEditor->setSingleStep(5.0);
     layout->addWidget(m_endAngleEditor);
     connect(m_endAngleEditor, &DoubleEditorRow::valueEdited, this, [this](double value) {
-        if (m_updating || !m_currentObject || !m_currentObject->setPathEndAngleDegrees(float(value))) {
+        if (m_updating || !m_currentObject || !m_sceneController
+            || !m_sceneController->setExtrudePathEndAngle(m_currentObject, float(value))) {
             refreshEditors();
         }
     });
@@ -142,7 +148,7 @@ ExtrudeSection::ExtrudeSection(QWidget *parent)
                 if (m_currentObject->pathType() == ExtrudeObject::PathType::Arc && index == 1) {
                     points[index].setY(0.0f);
                 }
-                if (!m_currentObject->setPathControlPoints(points)) {
+                if (!m_sceneController->setExtrudePathControlPoints(m_currentObject, points)) {
                     refreshEditors();
                 }
             });
@@ -165,8 +171,8 @@ ExtrudeSection::ExtrudeSection(QWidget *parent)
     m_profileVerticesEditor = PropertyEditorFactory::createPointListEditor(profileConfig, this);
     layout->addWidget(m_profileVerticesEditor);
     connect(m_profileVerticesEditor, &ReorderablePointListEditor::addRequested, this, [this] {
-        if (m_currentObject) {
-            m_currentObject->addRegularProfileVertex();
+        if (m_currentObject && m_sceneController) {
+            m_sceneController->addExtrudeRegularProfileVertex(m_currentObject);
         }
     });
     connect(m_profileVerticesEditor, &ReorderablePointListEditor::pointEdited, this,
@@ -183,18 +189,18 @@ ExtrudeSection::ExtrudeSection(QWidget *parent)
                 } else if (axis == 1) {
                     vertices[index].setY(float(value));
                 }
-                if (!m_currentObject->setProfileVertices(vertices)) {
+                if (!m_sceneController->setExtrudeProfileVertices(m_currentObject, vertices)) {
                     refreshEditors();
                 }
             });
     connect(m_profileVerticesEditor, &ReorderablePointListEditor::moveRequested, this, [this](int from, int to) {
-        if (m_currentObject) {
-            m_currentObject->moveProfileVertex(from, to);
+        if (m_currentObject && m_sceneController) {
+            m_sceneController->moveExtrudeProfileVertex(m_currentObject, from, to);
         }
     });
     connect(m_profileVerticesEditor, &ReorderablePointListEditor::removeRequested, this, [this](int index) {
-        if (m_currentObject) {
-            m_currentObject->removeProfileVertexAt(index);
+        if (m_currentObject && m_sceneController) {
+            m_sceneController->removeExtrudeProfileVertex(m_currentObject, index);
         }
     });
 }

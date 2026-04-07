@@ -9,8 +9,74 @@ set(SRC_FILES
         ${CMAKE_SOURCE_DIR}/src/core/x_property.h
         ${CMAKE_SOURCE_DIR}/src/core/x_property_validator.cpp
         ${CMAKE_SOURCE_DIR}/src/core/x_property_validator.h
+        ${CMAKE_SOURCE_DIR}/src/utils/compare_util.cpp
+        ${CMAKE_SOURCE_DIR}/src/utils/compare_util.h
         ${CMAKE_SOURCE_DIR}/src/scene/scene_object.cpp
         ${CMAKE_SOURCE_DIR}/src/scene/scene_object.h
+        ${CMAKE_SOURCE_DIR}/src/scene/scene_snapshot.cpp
+        ${CMAKE_SOURCE_DIR}/src/scene/scene_snapshot.h
+        ${CMAKE_SOURCE_DIR}/src/scene/scene_commands.cpp
+        ${CMAKE_SOURCE_DIR}/src/scene/scene_commands.h
+        ${CMAKE_SOURCE_DIR}/src/scene/primitive_object.cpp
+        ${CMAKE_SOURCE_DIR}/src/scene/primitive_object.h
+        ${CMAKE_SOURCE_DIR}/src/scene/polygon_object.cpp
+        ${CMAKE_SOURCE_DIR}/src/scene/polygon_object.h
+        ${CMAKE_SOURCE_DIR}/src/scene/extrude_object.cpp
+        ${CMAKE_SOURCE_DIR}/src/scene/extrude_object.h
+        ${CMAKE_SOURCE_DIR}/src/scene/primitive_render_node.cpp
+        ${CMAKE_SOURCE_DIR}/src/scene/primitive_render_node.h
+        ${CMAKE_SOURCE_DIR}/src/scene/polygon_render_node.cpp
+        ${CMAKE_SOURCE_DIR}/src/scene/polygon_render_node.h
+        ${CMAKE_SOURCE_DIR}/src/scene/extrude_render_node.cpp
+        ${CMAKE_SOURCE_DIR}/src/scene/extrude_render_node.h
+        ${CMAKE_SOURCE_DIR}/src/scene/geometry_render_node.h
+        ${CMAKE_SOURCE_DIR}/src/scene/scene_controller.cpp
+        ${CMAKE_SOURCE_DIR}/src/scene/scene_controller.h
+        ${CMAKE_SOURCE_DIR}/src/visualization/graph3d/render_node_factory.cpp
+        ${CMAKE_SOURCE_DIR}/src/visualization/graph3d/render_node_factory.h
+        ${CMAKE_SOURCE_DIR}/src/visualization/graph3d/scene_model.cpp
+        ${CMAKE_SOURCE_DIR}/src/visualization/graph3d/scene_model.h
+        ${CMAKE_SOURCE_DIR}/src/visualization/graph3d/nodes/render_node.cpp
+        ${CMAKE_SOURCE_DIR}/src/visualization/graph3d/nodes/render_node.h
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/extras/layer_manager.cpp
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/extras/layer_manager.h
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/extras/behavior_component.cpp
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/extras/behavior_component.h
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/utils/geometry_util.cpp
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/utils/geometry_util.h
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/computational_geometry/line_geometry.cpp
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/computational_geometry/line_geometry.h
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/computational_geometry/line_mesh.cpp
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/computational_geometry/line_mesh.h
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/computational_geometry/ring_geometry.cpp
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/computational_geometry/ring_geometry.h
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/computational_geometry/ring_mesh.cpp
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/computational_geometry/ring_mesh.h
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/computational_geometry/edge_mesh.cpp
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/computational_geometry/edge_mesh.h
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/computational_geometry/polygon_geometry.cpp
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/computational_geometry/polygon_geometry.h
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/computational_geometry/polygon_mesh.cpp
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/computational_geometry/polygon_mesh.h
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/computational_geometry/extrude_shape_geometry.cpp
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/computational_geometry/extrude_shape_geometry.h
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/computational_geometry/extrude_shape_mesh.cpp
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/computational_geometry/extrude_shape_mesh.h
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/curves/curve.cpp
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/curves/curve.h
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/curves/line_curve.cpp
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/curves/line_curve.h
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/curves/arc_curve.cpp
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/curves/arc_curve.h
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/curves/ellipse_curve.cpp
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/curves/ellipse_curve.h
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/curves/bezier_curve.cpp
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/curves/bezier_curve.h
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/curves/bezier_curve.tpp
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/shapes/shape.cpp
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/shapes/shape.h
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/shapes/polygon_profile_shape.cpp
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/shapes/polygon_profile_shape.h
         ${CMAKE_SOURCE_DIR}/src/property_panel/property_editor_factory.cpp
         ${CMAKE_SOURCE_DIR}/src/property_panel/property_editor_factory.h
         ${CMAKE_SOURCE_DIR}/src/property_panel/editors/color_editor.cpp
@@ -39,9 +105,20 @@ target_include_directories(property_panel_test PRIVATE
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/src/core
         ${CMAKE_SOURCE_DIR}/src/scene
+        ${CMAKE_SOURCE_DIR}/src/utils
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/extras
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/utils
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/curves
+        ${CMAKE_SOURCE_DIR}/src/q3dextension/shapes
+        ${CMAKE_SOURCE_DIR}/src/visualization/graph3d
+        ${CMAKE_SOURCE_DIR}/src/visualization/graph3d/nodes
 )
 
 target_link_libraries(property_panel_test PRIVATE
         Qt${QT_VERSION_MAJOR}::Widgets
         Qt${QT_VERSION_MAJOR}::Test
+        Qt${QT_VERSION_MAJOR}::3DCore
+        Qt${QT_VERSION_MAJOR}::3DRender
+        Qt${QT_VERSION_MAJOR}::3DInput
+        Qt${QT_VERSION_MAJOR}::3DExtras
 )

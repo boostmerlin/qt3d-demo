@@ -1,5 +1,6 @@
 #include <QComboBox>
 #include <QDoubleSpinBox>
+#include <QLineEdit>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QSignalSpy>
@@ -10,6 +11,8 @@
 #include "property_panel/editors/reorderable_point_list_editor.h"
 #include "property_panel/editors/vector3_editor.h"
 #include "property_panel/sections/object_section.h"
+#include "scene/primitive_object.h"
+#include "scene/scene_controller.h"
 #include "scene/scene_object.h"
 
 class TestSceneObject final : public SceneObject
@@ -41,6 +44,7 @@ private slots:
     void pointListEditorEmitsAddRequested();
     void objectSectionOnlyEmitsRemoveAfterConfirmation();
     void objectSectionDoesNotEmitRemoveWhenDialogCancelled();
+    void objectSectionNameEditCreatesUndoableCommand();
 };
 
 void PropertyPanelEditorTest::vector3EditorEmitsCombinedVector()
@@ -217,6 +221,41 @@ void PropertyPanelEditorTest::objectSectionDoesNotEmitRemoveWhenDialogCancelled(
     deleteButton->click();
 
     QCOMPARE(spy.count(), 0);
+}
+
+void PropertyPanelEditorTest::objectSectionNameEditCreatesUndoableCommand()
+{
+    SceneController controller;
+    auto *object = controller.addPrimitive(PrimitiveObject::PrimitiveType::Box);
+    QVERIFY(object != nullptr);
+    const QString originalName = object->name();
+    controller.undoStack()->clear();
+
+    ObjectSection section(&controller);
+    section.setObjects(controller.objects());
+    section.setCurrentObject(object);
+
+    QLineEdit *nameEdit = nullptr;
+    for (auto *lineEdit : section.findChildren<QLineEdit *>()) {
+        if (!lineEdit->isReadOnly()) {
+            nameEdit = lineEdit;
+            break;
+        }
+    }
+    QVERIFY(nameEdit != nullptr);
+
+    nameEdit->setText(QStringLiteral("Box Renamed"));
+    const bool invoked = QMetaObject::invokeMethod(nameEdit, "editingFinished", Qt::DirectConnection);
+    QVERIFY(invoked);
+
+    QCOMPARE(object->name(), QStringLiteral("Box Renamed"));
+    QVERIFY(controller.undoStack()->canUndo());
+
+    controller.undoStack()->undo();
+    QCOMPARE(object->name(), originalName);
+
+    controller.undoStack()->redo();
+    QCOMPARE(object->name(), QStringLiteral("Box Renamed"));
 }
 
 QTEST_MAIN(PropertyPanelEditorTest)

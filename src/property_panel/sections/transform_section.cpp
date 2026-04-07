@@ -5,9 +5,10 @@
 
 #include "property_panel/editors/vector3_editor.h"
 #include "property_panel/property_editor_factory.h"
+#include "scene/scene_controller.h"
 
-TransformSection::TransformSection(QWidget *parent)
-    : PropertySection(parent)
+TransformSection::TransformSection(SceneController *sceneController, QWidget *parent)
+    : PropertySection(sceneController, parent)
 {
     auto *layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -20,16 +21,16 @@ TransformSection::TransformSection(QWidget *parent)
     m_positionEditor = PropertyEditorFactory::createVector3Editor(tr("Position"), this);
     layout->addWidget(m_positionEditor);
     connect(m_positionEditor, &Vector3Editor::valueEdited, this, [this](const QVector3D &value) {
-        if (!m_updating && m_currentObject) {
-            m_currentObject->setPosition(value);
+        if (!m_updating && m_currentObject && m_sceneController) {
+            m_sceneController->setObjectPosition(m_currentObject, value);
         }
     });
 
     m_rotationEditor = PropertyEditorFactory::createVector3Editor(tr("Rotation"), this);
     layout->addWidget(m_rotationEditor);
     connect(m_rotationEditor, &Vector3Editor::valueEdited, this, [this](const QVector3D &value) {
-        if (!m_updating && m_currentObject) {
-            m_currentObject->setRotation(value);
+        if (!m_updating && m_currentObject && m_sceneController) {
+            m_sceneController->setObjectRotation(m_currentObject, value);
         }
     });
 }

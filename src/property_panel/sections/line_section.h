@@ -12,7 +12,7 @@ class LineSection final : public PropertySection
     Q_OBJECT
 
 public:
-    explicit LineSection(QWidget *parent = nullptr);
+    explicit LineSection(SceneController *sceneController = nullptr, QWidget *parent = nullptr);
 
     void setObjects(const QList<SceneObject *> &objects) override;
     void setCurrentObject(SceneObject *object) override;

@@ -6,9 +6,10 @@
 #include "scene/primitive_object.h"
 #include "property_panel/editors/double_editor_row.h"
 #include "property_panel/property_editor_factory.h"
+#include "scene/scene_controller.h"
 
-PrimitiveDimensionsSection::PrimitiveDimensionsSection(QWidget *parent)
-    : PropertySection(parent)
+PrimitiveDimensionsSection::PrimitiveDimensionsSection(SceneController *sceneController, QWidget *parent)
+    : PropertySection(sceneController, parent)
 {
     auto *layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -24,8 +25,8 @@ PrimitiveDimensionsSection::PrimitiveDimensionsSection(QWidget *parent)
         layout->addWidget(editor);
         m_dimensionEditors[index] = editor;
         connect(editor, &DoubleEditorRow::valueEdited, this, [this, index](double value) {
-            if (!m_updating && m_currentObject) {
-                m_currentObject->setDimensionValue(index, float(value));
+            if (!m_updating && m_currentObject && m_sceneController) {
+                m_sceneController->setPrimitiveDimension(m_currentObject, index, float(value));
             }
         });
     }

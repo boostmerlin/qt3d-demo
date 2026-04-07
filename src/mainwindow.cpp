@@ -1,7 +1,9 @@
 #include <QAbstractItemView>
+#include <QAction>
 #include <QApplication>
 #include <QEvent>
 #include <QList>
+#include <QMenu>
 #include <QMouseEvent>
 #include <QSizePolicy>
 #include <QSplitter>
@@ -32,6 +34,7 @@ MainWindow::MainWindow(QWidget *parent)
     setupEditorLayout();
     setupWindowStyle();
     connect(ui->actionExit_e, &QAction::triggered, this, &MainWindow::onExit);
+    createMenuActions();
     setupSceneView();
     setupHierarchy();
     setupPropertyPanel();
@@ -205,6 +208,17 @@ void MainWindow::createActions() {
     });
 }
 
+void MainWindow::createMenuActions()
+{
+    m_editMenu = menuBar()->addMenu(tr("Edit"));
+    m_undoAction = m_sceneController->undoStack()->createUndoAction(this, tr("Undo"));
+    m_redoAction = m_sceneController->undoStack()->createRedoAction(this, tr("Redo"));
+    m_undoAction->setShortcuts(QKeySequence::Undo);
+    m_redoAction->setShortcuts(QKeySequence::Redo);
+    m_editMenu->addAction(m_undoAction);
+    m_editMenu->addAction(m_redoAction);
+}
+
 void MainWindow::addPrimitiveButton(const QString &label, int type, const QString &iconName)
 {
     addToolbarButton(label, iconName, [this, type] {
@@ -258,7 +272,7 @@ void MainWindow::setupSceneView()
 
 void MainWindow::setupHierarchy()
 {
-    m_hierarchy = new Hierarchy(ui->treeView, this);
+    m_hierarchy = new Hierarchy(ui->treeView, m_sceneController, this);
 }
 
 void MainWindow::setupPropertyPanel()
@@ -266,7 +280,7 @@ void MainWindow::setupPropertyPanel()
     auto *layout = new QVBoxLayout(ui->property_frame);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
-    m_propertyPanel = new PropertyPanel(ui->property_frame);
+    m_propertyPanel = new PropertyPanel(m_sceneController, ui->property_frame);
     layout->addWidget(m_propertyPanel);
 }
 

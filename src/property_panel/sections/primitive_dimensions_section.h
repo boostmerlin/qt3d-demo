@@ -14,7 +14,7 @@ class PrimitiveDimensionsSection final : public PropertySection
     Q_OBJECT
 
 public:
-    explicit PrimitiveDimensionsSection(QWidget *parent = nullptr);
+    explicit PrimitiveDimensionsSection(SceneController *sceneController = nullptr, QWidget *parent = nullptr);
 
     void setObjects(const QList<SceneObject *> &objects) override;
     void setCurrentObject(SceneObject *object) override;

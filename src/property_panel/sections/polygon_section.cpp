@@ -10,9 +10,10 @@
 #include "property_panel/editors/int_editor_row.h"
 #include "property_panel/editors/reorderable_point_list_editor.h"
 #include "property_panel/property_editor_factory.h"
+#include "scene/scene_controller.h"
 
-PolygonSection::PolygonSection(QWidget *parent)
-    : PropertySection(parent)
+PolygonSection::PolygonSection(SceneController *sceneController, QWidget *parent)
+    : PropertySection(sceneController, parent)
 {
     auto *layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -36,8 +37,8 @@ PolygonSection::PolygonSection(QWidget *parent)
     m_verticesEditor = PropertyEditorFactory::createPointListEditor(config, this);
     layout->addWidget(m_verticesEditor);
     connect(m_verticesEditor, &ReorderablePointListEditor::addRequested, this, [this] {
-        if (m_currentObject) {
-            m_currentObject->addRegularVertex();
+        if (m_currentObject && m_sceneController) {
+            m_sceneController->addPolygonRegularVertex(m_currentObject);
         }
     });
     connect(m_verticesEditor, &ReorderablePointListEditor::pointEdited, this,
@@ -56,16 +57,16 @@ PolygonSection::PolygonSection(QWidget *parent)
                 } else if (axis == 2) {
                     vertices[index].setZ(float(value));
                 }
-                m_currentObject->setVertices(vertices);
+                m_sceneController->setPolygonVertices(m_currentObject, vertices);
             });
     connect(m_verticesEditor, &ReorderablePointListEditor::moveRequested, this, [this](int from, int to) {
-        if (m_currentObject) {
-            m_currentObject->moveVertex(from, to);
+        if (m_currentObject && m_sceneController) {
+            m_sceneController->movePolygonVertex(m_currentObject, from, to);
         }
     });
     connect(m_verticesEditor, &ReorderablePointListEditor::removeRequested, this, [this](int index) {
-        if (m_currentObject) {
-            m_currentObject->removeVertexAt(index);
+        if (m_currentObject && m_sceneController) {
+            m_sceneController->removePolygonVertex(m_currentObject, index);
         }
     });
 
@@ -73,7 +74,8 @@ PolygonSection::PolygonSection(QWidget *parent)
     m_heightEditor->setRange(0.0, 9999.0);
     layout->addWidget(m_heightEditor);
     connect(m_heightEditor, &DoubleEditorRow::valueEdited, this, [this](double value) {
-        if (m_updating || !m_currentObject || !m_currentObject->setHeight(float(value))) {
+        if (m_updating || !m_currentObject || !m_sceneController
+            || !m_sceneController->setPolygonHeight(m_currentObject, float(value))) {
             refreshEditors();
         }
     });
@@ -82,7 +84,7 @@ PolygonSection::PolygonSection(QWidget *parent)
     m_ringsEditor->setRange(0, 64);
     layout->addWidget(m_ringsEditor);
     connect(m_ringsEditor, &IntEditorRow::valueEdited, this, [this](int value) {
-        if (m_updating || !m_currentObject) {
+        if (m_updating || !m_currentObject || !m_sceneController) {
             return;
         }
         if (value == 1) {
@@ -90,7 +92,7 @@ PolygonSection::PolygonSection(QWidget *parent)
             m_ringsEditor->setValue(2);
             value = 2;
         }
-        if (!m_currentObject->setRings(uint(value))) {
+        if (!m_sceneController->setPolygonRings(m_currentObject, uint(value))) {
             refreshEditors();
         }
     });

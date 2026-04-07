@@ -7,6 +7,7 @@
 #include "scene/scene_object.h"
 
 class QModelIndex;
+class SceneController;
 class QStandardItem;
 class QStandardItemModel;
 class QTreeView;
@@ -16,7 +17,7 @@ class Hierarchy final : public QObject
     Q_OBJECT
 
 public:
-    explicit Hierarchy(QTreeView *view, QObject *parent = nullptr);
+    explicit Hierarchy(QTreeView *view, SceneController *sceneController = nullptr, QObject *parent = nullptr);
 
     void setObjects(const QList<SceneObject *> &objects);
     void setCurrentObject(SceneObject *object);
@@ -33,6 +34,7 @@ private:
                                                 QStandardItem *parentItem = nullptr) const;
 
     QPointer<QTreeView> m_view;
+    SceneController *m_sceneController{};
     QStandardItemModel *m_model{};
     QList<SceneObject *> m_objects;
     QPointer<SceneObject> m_currentObject;

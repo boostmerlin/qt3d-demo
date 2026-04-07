@@ -9,6 +9,8 @@
 #include <QTreeView>
 #include <QVariant>
 
+#include "scene/scene_controller.h"
+
 namespace {
 class HierarchyRenameDelegate final : public QStyledItemDelegate {
 public:
@@ -29,9 +31,10 @@ public:
 };
 }
 
-Hierarchy::Hierarchy(QTreeView *view, QObject *parent)
+Hierarchy::Hierarchy(QTreeView *view, SceneController *sceneController, QObject *parent)
     : QObject(parent)
     , m_view(view)
+    , m_sceneController(sceneController)
     , m_model(new QStandardItemModel(this))
 {
     Q_ASSERT(m_view);
@@ -57,7 +60,7 @@ Hierarchy::Hierarchy(QTreeView *view, QObject *parent)
                 emit currentObjectRequested(object);
             });
 
-    connect(m_model, &QStandardItemModel::itemChanged, this, [](QStandardItem *item) {
+    connect(m_model, &QStandardItemModel::itemChanged, this, [this](QStandardItem *item) {
         if (!item) {
             return;
         }
@@ -69,8 +72,8 @@ Hierarchy::Hierarchy(QTreeView *view, QObject *parent)
 
         const QString text = item->text().trimmed();
         const QString nextName = text.isEmpty() ? object->name() : text;
-        if (nextName != object->name()) {
-            object->setName(nextName);
+        if (nextName != object->name() && m_sceneController) {
+            m_sceneController->setObjectName(object, nextName);
         }
         if (item->text() != nextName) {
             item->setText(nextName);

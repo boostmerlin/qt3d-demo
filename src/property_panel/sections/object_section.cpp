@@ -9,9 +9,10 @@
 #include "property_panel/editors/enum_editor.h"
 #include "property_panel/editors/text_editor_row.h"
 #include "property_panel/property_editor_factory.h"
+#include "scene/scene_controller.h"
 
-ObjectSection::ObjectSection(QWidget *parent)
-    : PropertySection(parent)
+ObjectSection::ObjectSection(SceneController *sceneController, QWidget *parent)
+    : PropertySection(sceneController, parent)
 {
     auto *layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -24,8 +25,8 @@ ObjectSection::ObjectSection(QWidget *parent)
     m_nameEditor = PropertyEditorFactory::createTextEditor(tr("Name"), this);
     layout->addWidget(m_nameEditor);
     connect(m_nameEditor, &TextEditorRow::editingFinished, this, [this](const QString &text) {
-        if (!m_updating && m_currentObject) {
-            m_currentObject->setName(text);
+        if (!m_updating && m_currentObject && m_sceneController) {
+            m_sceneController->setObjectName(m_currentObject, text);
         }
     });
 
@@ -47,8 +48,8 @@ ObjectSection::ObjectSection(QWidget *parent)
     m_colorEditor->setDialogTitle(tr("Select Object Color"));
     layout->addWidget(m_colorEditor);
     connect(m_colorEditor, &ColorEditor::valueEdited, this, [this](const QColor &color) {
-        if (!m_updating && m_currentObject) {
-            m_currentObject->setColor(color);
+        if (!m_updating && m_currentObject && m_sceneController) {
+            m_sceneController->setObjectColor(m_currentObject, color);
         }
     });
 

@@ -2,10 +2,16 @@
 
 SceneObject::SceneObject(QObject *parent)
     : QObservableObject(parent)
+    , m_id(QUuid::createUuid())
 {
     setPosition(QVector3D(0.0f, 0.0f, 0.0f));
     setRotation(QVector3D(0.0f, 0.0f, 0.0f));
     setColor(QColorConstants::White);
+}
+
+const QUuid &SceneObject::id() const
+{
+    return m_id;
 }
 
 SceneObject *SceneObject::parentSceneObject() const
@@ -35,4 +41,9 @@ bool SceneObject::isAncestorOf(const SceneObject *object) const
         cursor = cursor->parentSceneObject();
     }
     return false;
+}
+
+void SceneObject::restoreId(const QUuid &id)
+{
+    m_id = id;
 }

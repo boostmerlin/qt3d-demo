@@ -16,7 +16,7 @@ class ExtrudeSection final : public PropertySection
     Q_OBJECT
 
 public:
-    explicit ExtrudeSection(QWidget *parent = nullptr);
+    explicit ExtrudeSection(SceneController *sceneController = nullptr, QWidget *parent = nullptr);
 
     void setObjects(const QList<SceneObject *> &objects) override;
     void setCurrentObject(SceneObject *object) override;

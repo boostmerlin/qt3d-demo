@@ -14,7 +14,7 @@ class ObjectSection final : public PropertySection
     Q_OBJECT
 
 public:
-    explicit ObjectSection(QWidget *parent = nullptr);
+    explicit ObjectSection(SceneController *sceneController = nullptr, QWidget *parent = nullptr);
 
     void setObjects(const QList<SceneObject *> &objects) override;
     void setCurrentObject(SceneObject *object) override;
